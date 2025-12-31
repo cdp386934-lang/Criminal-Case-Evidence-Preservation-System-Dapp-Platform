@@ -1,0 +1,30 @@
+{
+  "name": "criminal-case-evidence-dapp",
+  "version": "1.0.0",
+  "description": "刑事案件链上存证 DApp 平台",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "contracts"
+  ],
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "build:contracts": "cd contracts && npx hardhat compile",
+    "deploy:contracts": "cd contracts && npx hardhat run scripts/deploy.ts",
+    "test:contracts": "cd contracts && npx hardhat test"
+  },
+  "keywords": [
+    "blockchain",
+    "dapp",
+    "evidence",
+    "legal",
+    "nextjs"
+  ],
+  "author": "",
+  "license": "MIT"
+}
+
