@@ -9,16 +9,22 @@ import {
   moveCaseNextStage,
   getCaseTimeline,
 } from '../controllers/case.controller';
-import { requireRole } from '../types/rbac';
 
 const router = Router();
 
-router.post('/add',authenticate, addCase);
-router.put('/update/:id', authenticate, updateCase);
-router.delete('/delete/:id', authenticate, deleteCase);
-router.get('/get/:id', authenticate, getCase);
-router.get('/list', authenticate, listCases);
-router.post('/move-next-stage/:id', authenticate, moveCaseNextStage);
-router.get('/timeline/:id', authenticate, getCaseTimeline);
+/**
+ * Case CRUD
+ */
+router.post('/', authenticate, addCase);            // 创建案件
+router.get('/', authenticate, listCases);           // 查询当前用户案件列表
+router.get('/:id', authenticate, getCase);          // 查询单个案件
+router.put('/:id', authenticate, updateCase);       // 更新案件
+router.delete('/:id', authenticate, deleteCase);    // 删除案件
+
+/**
+ * Case workflow
+ */
+router.post('/:id/status', authenticate, moveCaseNextStage); // 推进案件状态
+router.get('/:id/timeline', authenticate, getCaseTimeline);  // 案件时间线
 
 export default router;

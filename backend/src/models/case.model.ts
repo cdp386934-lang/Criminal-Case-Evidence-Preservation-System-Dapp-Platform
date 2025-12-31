@@ -2,43 +2,51 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export enum CaseStatus {
   INVESTIGATION = 'INVESTIGATION', // 侦查中
-  PROCURATORATE = 'PROCURATORATE', // 起诉
-  COURT_TRIAL = 'COURT_TRIAL', // 法院审理
-  CLOSED = 'CLOSED', // 结案
+  PROSECUTORATE = 'PROSECUTORATE', // 起诉
+  COURT_TRIAL = 'COURT_TRIAL',     // 法院审理
+  CLOSED = 'CLOSED',               // 结案
 }
 
 export enum CaseType {
-  PUBLIC_PROSECUTION = 'public_prosecution', // 公诉:
-  CIVIL_LITIGATION = 'civil_litigation'  //民事诉讼；
+  PUBLIC_PROSECUTION = 'PUBLIC_PROSECUTION', // 公诉
+  CIVIL_LITIGATION = 'CIVIL_LITIGATION',     // 民事诉讼
 }
 
 /**
- * 推进案件状态的请求体接口
+ * 推进案件状态请求体
+ *（模型中保留，用于 controller 类型约束）
  */
 export interface MoveCaseNextStageBody {
-  targetStatus?: CaseStatus; // 目标状态（可选，不提供则自动推断）
-  comment?: string; // 备注说明
-  operatorAddress?: string; // 操作者钱包地址
+  targetStatus?: CaseStatus;
+  comment?: string;
+  operatorAddress?: string;
 }
-
 
 export interface ICase extends Document {
   caseNumber: string;
   caseTitle: string;
   caseType: CaseType;
-  //根据caseType的特定字段
-  lawyerIds?: mongoose.Types.ObjectId[];//律师
-  prosecutorIds?: mongoose.Types.ObjectId[];//检察官
-  plaintiffLawyerIds?: mongoose.Types.ObjectId[];//原告律师
-  defendantLawyerIds?: mongoose.Types.ObjectId[];//被告律师
-  //通用字段
+
+  /** 公诉案件 */
+  prosecutorIds?: mongoose.Types.ObjectId[];
+
+  /** 民事案件 */
+  plaintiffLawyerIds?: mongoose.Types.ObjectId[];
+
+  /** 通用 */
+  defendantLawyerIds?: mongoose.Types.ObjectId[];
+
   description?: string;
   plaintiffMessage?: string;
   defendantMessage?: string;
-  judgeIds?: mongoose.Types.ObjectId[];
+
+  /** 案件参与人员 */
   policeId?: mongoose.Types.ObjectId;
+  judgeId?: mongoose.Types.ObjectId;
+
   status: CaseStatus;
-  caseCreatedAt: Date;
+
+  createdAt: Date;
   updatedAt: Date;
 }
 
@@ -48,51 +56,64 @@ const CaseSchema = new Schema<ICase>(
       type: String,
       required: true,
       unique: true,
+      index: true,
     },
+
     caseTitle: {
       type: String,
       required: true,
     },
+
     caseType: {
       type: String,
       enum: Object.values(CaseType),
-      default: CaseType.PUBLIC_PROSECUTION,
+      required: true,
     },
+
     description: {
       type: String,
     },
+
+    /** ===== 角色分离字段 ===== */
+
     prosecutorIds: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'User', // 关联检察官用户
+        ref: 'User',
       },
     ],
+
+    plaintiffLawyerIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+
+    defendantLawyerIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+
+    /** ===== 指派人员 ===== */
+
     policeId: {
       type: Schema.Types.ObjectId,
-      ref: 'User', // 关联立案公安用户
+      ref: 'User',
     },
-    judgeIds: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'User', // 关联法官用户
-      },
-    ],
-    plaintiffLawyerIds:[
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'User', // 关联原告律师用户
-      }
-    ],
-    defendantLawyerIds:[
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'User', // 关联被告律师用户
-      }
-    ],
+
+    judgeId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
+
     status: {
       type: String,
       enum: Object.values(CaseStatus),
       default: CaseStatus.INVESTIGATION,
+      index: true,
     },
   },
   {
@@ -100,35 +121,11 @@ const CaseSchema = new Schema<ICase>(
   }
 );
 
-CaseSchema.pre('validate', function (next) {
-  if (this.caseType === CaseType.PUBLIC_PROSECUTION) {
-    if (!this.prosecutorIds || this.prosecutorIds.length === 0) {
-      return next(new Error('公诉案件必须指定检察官'));
-    }
-    if (
-      !this.defendantLawyerIds
-    ) {
-      return next(new Error('公诉案件必须指定被告律师'));
-    }
-  }
-
-  if (this.caseType === CaseType.CIVIL_LITIGATION) {
-    if (
-      !this.plaintiffLawyerIds ||
-      !this.defendantLawyerIds
-    ) {
-      return next(new Error('民事诉讼必须指定原被告律师'));
-    }
-  }
-
-  next();
-});
-
-
-// 索引
-CaseSchema.index({ caseNumber: 1 });
+/** ===== 常用查询索引 ===== */
 CaseSchema.index({ prosecutorIds: 1 });
-CaseSchema.index({ status: 1 });
+CaseSchema.index({ plaintiffLawyerIds: 1 });
+CaseSchema.index({ defendantLawyerIds: 1 });
+CaseSchema.index({ policeId: 1 });
+CaseSchema.index({ judgeId: 1 });
 
 export default mongoose.model<ICase>('Case', CaseSchema);
-
