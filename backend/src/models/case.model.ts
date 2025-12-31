@@ -12,18 +12,6 @@ export enum CaseType {
   CIVIL_LITIGATION = 'civil_litigation'  //民事诉讼；
 }
 
-export interface AddCaseBody {
-  caseNumber: string;
-  caseTitle: string;
-  caseType: CaseType;
-  description?: string;
-  plaintiffMessage?:string;
-  defendantMessage?:string;
-  prosecutorIds?: string[]; // 检察官ID（可选，公安立案时可能还没有）
-  judgeIds?: string[]; // 法官ID数组（可选）
-  lawyerIds?: string[]; // 律师ID数组（可选）
-}
-
 /**
  * 推进案件状态的请求体接口
  */
@@ -33,43 +21,25 @@ export interface MoveCaseNextStageBody {
   operatorAddress?: string; // 操作者钱包地址
 }
 
-export interface CreateCaseDTO {
+
+export interface ICase extends Document {
   caseNumber: string;
   caseTitle: string;
   caseType: CaseType;
+  //根据caseType的特定字段
+  lawyerIds?: mongoose.Types.ObjectId[];//律师
+  prosecutorIds?: mongoose.Types.ObjectId[];//检察官
+  plaintiffLawyerIds?: mongoose.Types.ObjectId[];//原告律师
+  defendantLawyerIds?: mongoose.Types.ObjectId[];//被告律师
+  //通用字段
   description?: string;
-  plaintiffMessage?:string;
-  defendantMessage?:string;
-  prosecutorIds?: string[]; // 可选，公安立案时可能还没有
-  judgeIds?: string[]; // 可选
-  lawyerIds?: string[]; // 可选
-  status?: CaseStatus;
-}
-
-export interface UpdateCaseDTO {
-  caseTitle?: string;
-  caseType?: CaseType;
-  description?: string;
-  judgeIds?: string[];
-  lawyerIds?: string[];
-  status?: CaseStatus;
-}
-
-export interface ICase extends Document {
-  caseNumber: string; 
-  caseTitle: string; 
-  caseType: CaseType; 
-  description?: string; 
-  plaintiffMessage?:string;
-  defendantMessage?:string;
-  prosecutorIds?: mongoose.Types.ObjectId[]; 
-  judgeIds?: mongoose.Types.ObjectId[]; 
-  lawyerIds?: mongoose.Types.ObjectId[]; 
-  policeId?: mongoose.Types.ObjectId; 
-  status: CaseStatus; 
+  plaintiffMessage?: string;
+  defendantMessage?: string;
+  judgeIds?: mongoose.Types.ObjectId[];
+  policeId?: mongoose.Types.ObjectId;
+  status: CaseStatus;
   caseCreatedAt: Date;
   updatedAt: Date;
-  result?: string; 
 }
 
 const CaseSchema = new Schema<ICase>(
@@ -107,11 +77,17 @@ const CaseSchema = new Schema<ICase>(
         ref: 'User', // 关联法官用户
       },
     ],
-    lawyerIds: [
+    plaintiffLawyerIds:[
       {
         type: Schema.Types.ObjectId,
-        ref: 'User', // 关联律师用户
-      },
+        ref: 'User', // 关联原告律师用户
+      }
+    ],
+    defendantLawyerIds:[
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User', // 关联被告律师用户
+      }
     ],
     status: {
       type: String,
@@ -123,6 +99,31 @@ const CaseSchema = new Schema<ICase>(
     timestamps: true,
   }
 );
+
+CaseSchema.pre('validate', function (next) {
+  if (this.caseType === CaseType.PUBLIC_PROSECUTION) {
+    if (!this.prosecutorIds || this.prosecutorIds.length === 0) {
+      return next(new Error('公诉案件必须指定检察官'));
+    }
+    if (
+      !this.defendantLawyerIds
+    ) {
+      return next(new Error('公诉案件必须指定被告律师'));
+    }
+  }
+
+  if (this.caseType === CaseType.CIVIL_LITIGATION) {
+    if (
+      !this.plaintiffLawyerIds ||
+      !this.defendantLawyerIds
+    ) {
+      return next(new Error('民事诉讼必须指定原被告律师'));
+    }
+  }
+
+  next();
+});
+
 
 // 索引
 CaseSchema.index({ caseNumber: 1 });
