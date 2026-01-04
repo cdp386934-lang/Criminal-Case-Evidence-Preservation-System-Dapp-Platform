@@ -1,5 +1,4 @@
 import { NextFunction, Response } from 'express';
-import mongoose from 'mongoose';
 import { AuthRequest, AuthenticatedUserPayload } from '../middleware/auth';
 import { UserRole } from '../models/users.model';
 import Case, { CaseStatus, CaseType, MoveCaseNextStageBody, ICase } from '../models/case.model';
@@ -8,8 +7,20 @@ import OperationLog from '../models/operation-logs.model';
 import { requireRole } from '../types/rbac';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
-import {loadAndCheckCase} from '../permission/case.permission'
-
+import {isCaseParticipant,loadAndCheckCase} from '../services/case.helper.service'
+interface AddCaseBody {
+    caseNumber: string;
+    caseTitle: string;
+    caseType: CaseType;
+    description?: string;
+    plaintiffMessage?: string;
+    defendantMessage?: string;
+    prosecutorIds?: string[];       // 公诉案件 - 检察官ID
+    judgeIds?: string[];            // 通用 - 法官ID
+    plaintiffLawyerIds?: string[];  // 民事诉讼 - 原告律师ID
+    defendantLawyerIds?: string[];  // 民事诉讼 - 被告律师ID
+    lawyerIds?: string[];           // 公诉案件 - 律师ID（通用）
+}
 /* =====================================================
    案件状态流转配置
 ===================================================== */
@@ -129,7 +140,7 @@ export const updateCase = async (req: AuthRequest, res: Response, next: NextFunc
       UserRole.JUDGE,
     ]);
 
-    const caseDoc = await loadAndCheckCase(req.params.id, user);
+    const caseDoc = await loadAndCheckCase(user.id,);
 
     Object.assign(caseDoc, req.body);
     await caseDoc.save();
@@ -146,7 +157,7 @@ export const deleteCase = async (req: AuthRequest, res: Response, next: NextFunc
   try {
     const user = requireRole(req.user, [UserRole.POLICE, UserRole.JUDGE]);
 
-    const caseDoc = await loadAndCheckCase(req.params.id, user);
+    const caseDoc = await loadAndCheckCase(user.id, user);
     await caseDoc.deleteOne();
 
     await recordOperation(req, 'CASE_DELETE', req.params.id);

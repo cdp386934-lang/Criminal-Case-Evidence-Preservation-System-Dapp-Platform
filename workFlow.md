@@ -72,15 +72,6 @@ ps:
  *   个人中心： /prosecutor/profile
  */
 
- https://git.lottery.next.js-based-Criminal-Case-Evidence-Preservation-System-Dapp-Platform.org/code/git
-
-
-========================================================================
-后端：
-utils/blockchain.ts：更新合约对角色的授权，以及合约中获取的ABI接口；
-controller/userController.ts：管理员对于用户信息的增删改查，同时用户个人可以对自己的信息进行修改；
-controller/operationLogController.ts；管理员对用户操作额任何日志信息进行查看方便追踪数据流向；
-
 案件的三个状态：
   INVESTIGATION = 'INVESTIGATION', // 侦查中
   当案件在侦察中时，police和lawyer可以上传证据；lawyer上传证据（需要新增）
@@ -90,9 +81,3 @@ controller/operationLogController.ts；管理员对用户操作额任何日志�
   COURT_TRIAL = 'COURT_TRIAL', // 法院审理
   当案件在审理中时，lawyer、procurator可以上传辩护材料，只有在这个阶段中才能进行上传辩护材料（对辩护材料进行增删改查）
   在案件审理过程中，法官会对证据和辩护材料进行审查；
-
-
-
-前端：
-补充:notificationApi.ts
-

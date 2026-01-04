@@ -8,37 +8,6 @@ export enum EvidenceType {
   DOCUMENT = 'document',
   OTHER = 'other',
 }
-
-export interface AddEvidenceBody {
-  caseId: string;
-  title: string;
-  description?: string;
-  fileHash: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  evidenceType: string;
-}
-
-export interface CreateEvidenceDTO {
-  caseId: string;
-  uploaderId: string;
-  title: string;
-  description?: string;
-  fileHash: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  evidenceType: EvidenceType;
-}
-
-export interface UpdateEvidenceDTO {
-  title?: string;
-  description?: string;
-  evidenceType?: EvidenceType;
-  status?: EvidenceStatus;
-}
-
 export enum EvidenceStatus {
   PENDING = 'pending',
   VERIFIED = 'verified',

@@ -5,27 +5,6 @@ export enum CorrectionStatus {
   APPROVED = 'approved',
   REJECTED = 'rejected',
 }
-
-export interface AddCorrectionBody {
-  caseId: string;
-  originalEvidenceId: string;
-  reason: string;
-  fileHash: string;
-}
-
-
-export interface CreateCorrectionDTO {
-  caseId: string;
-  originalEvidenceId: string;
-  submittedBy: string;
-  reason: string;
-  fileHash: string;
-}
-
-export interface UpdateCorrectionDTO {
-  reason?: string;
-  status?: CorrectionStatus;
-}
 export interface ICorrection extends Document {
   correctionId: string;
   caseId: mongoose.Types.ObjectId;

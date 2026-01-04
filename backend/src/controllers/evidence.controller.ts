@@ -1,100 +1,28 @@
 // 证据控制器
 import { NextFunction, Response } from 'express';
-import crypto from 'crypto';
 import { AuthRequest, AuthenticatedUserPayload } from '../middleware/auth';
 import { UserRole } from '../models/users.model';
 import { CaseStatus } from '../models/case.model';
-import Case, { ICase } from '../models/case.model';
-import Evidence, { EvidenceStatus, IEvidence, CreateEvidenceDTO, UpdateEvidenceDTO, AddEvidenceBody } from '../models/evidence.model';
-import { addEvidenceToBlockchain } from '../utils/blockchain';
 import { requireRole } from '../types/rbac';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
 import * as notificationUtils from '../utils/notification';
 import { NotificationType, NotificationPriority } from '../models/notification.model';
+import {getCaseById} from '../services/case.service';     
+import { isCaseParticipant } from '../services/case.helper.service';
+import { createEvidence, deleteEvidenceInternal, getEvidenceById, listEvidenceByCaseInternal, updateEvidenceInternal } from '../services/evidence.service';
+import { CreateEvidenceDTO, UpdateEvidenceDTO } from '../dto/evidence.dto';
 
-/**
- * Case Service Helper Functions
- */
-const getCaseById = async (caseId: string): Promise<ICase | null> => {
-  return Case.findById(caseId);
-};
-
-const isCaseParticipant = (caseDocument: ICase, userId: string, role: UserRole): boolean => {
-  const normalizedUserId = userId.toString();
-
-  if (role === UserRole.POLICE) {
-    return caseDocument.policeId?.toString() === normalizedUserId;
-  }
-
-  if (role === UserRole.PROSECUTOR) {
-    return caseDocument.prosecutorIds?.some(id => id.toString() === normalizedUserId) || false;
-  }
-
-  if (role === UserRole.JUDGE) {
-    return caseDocument.judgeIds?.some(id => id.toString() === normalizedUserId) || false;
-  }
-
-  if (role === UserRole.LAWYER) {
-    return caseDocument.lawyerIds?.some(id => id.toString() === normalizedUserId) || false;
-  }
-
-  return false;
-};
-
-/**
- * Evidence Service Functions
- */
-const createEvidence = async (payload: CreateEvidenceDTO): Promise<IEvidence> => {
-  const caseDocument = await Case.findById(payload.caseId);
-  if (!caseDocument) {
-    throw new NotFoundError('Case not found');
-  }
-
-  const { evidenceId, txHash } = await addEvidenceToBlockchain(caseDocument.caseNumber, payload.fileHash);
-  const evidenceUUID = crypto.randomUUID();
-
-  const evidence = new Evidence({
-    evidenceId: evidenceUUID,
-    caseId: payload.caseId,
-    uploaderId: payload.uploaderId,
-    title: payload.title,
-    description: payload.description,
-    fileHash: payload.fileHash,
-    fileName: payload.fileName,
-    fileType: payload.fileType,
-    fileSize: payload.fileSize,
-    evidenceType: payload.evidenceType,
-    blockchainEvidenceId: evidenceId,
-    blockchainTxHash: txHash,
-    status: EvidenceStatus.VERIFIED,
-  });
-
-  return evidence.save();
-};
-
-const updateEvidenceInternal = async (id: string, updates: UpdateEvidenceDTO): Promise<IEvidence> => {
-  const updated = await Evidence.findByIdAndUpdate(id, updates, { new: true });
-  if (!updated) {
-    throw new NotFoundError('Evidence not found');
-  }
-  return updated;
-};
-
-const deleteEvidenceInternal = async (id: string): Promise<void> => {
-  const deleted = await Evidence.findByIdAndDelete(id);
-  if (!deleted) {
-    throw new NotFoundError('Evidence not found');
-  }
-};
-
-const getEvidenceById = async (id: string): Promise<IEvidence | null> => {
-  return Evidence.findById(id);
-};
-
-const listEvidenceByCaseInternal = async (caseId: string): Promise<IEvidence[]> => {
-  return Evidence.find({ caseId }).sort({ createdAt: -1 });
-};
+interface AddEvidenceBody {
+  caseId: string;
+  title: string;
+  description?: string;
+  fileHash: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  evidenceType: string;
+}
 
 type ControllerHandler = (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;
 
@@ -104,7 +32,7 @@ type EvidenceAction = 'view' | 'upload' | 'modify';
 const POLICE_EVIDENCE_STAGES = new Set<CaseStatus>([CaseStatus.INVESTIGATION]);
 
 // 检察官上传证据阶段：仅在“移送审查起诉”阶段允许
-const PROSECUTOR_UPLOAD_STAGES = new Set<CaseStatus>([CaseStatus.PROCURATORATE,CaseStatus.COURT_TRIAL]);
+const PROSECUTOR_UPLOAD_STAGES = new Set<CaseStatus>([CaseStatus.PROSECUTORATE,CaseStatus.COURT_TRIAL]);
 
 const JUDGE_UPLOAD_STAGES = new Set<CaseStatus>([CaseStatus.COURT_TRIAL]);
 
@@ -112,7 +40,7 @@ const JUDGE_UPLOAD_STAGES = new Set<CaseStatus>([CaseStatus.COURT_TRIAL]);
 // 因此只要是案件参与律师，在任意案件阶段都可以查看/上传证据
 const LAWYER_VIEW_STAGES = new Set<CaseStatus>([
   CaseStatus.INVESTIGATION,
-  CaseStatus.PROCURATORATE,
+  CaseStatus.PROSECUTORATE,
   CaseStatus.COURT_TRIAL,
 ]);
 

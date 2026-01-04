@@ -12,41 +12,10 @@ import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors'
 import { sendSuccess } from '../utils/response';
 import * as notificationUtils from '../utils/notification';
 import { NotificationType, NotificationPriority } from '../models/notification.model';
+import {getCaseById} from '../services/case.service'
+import {isCaseParticipant} from '../services/case.helper.service';
 
 type ControllerHandler = (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;
-
-/**
- * Case Service Helper Functions
- */
-const getCaseById = async (caseId: string): Promise<ICase | null> => {
-  return Case.findById(caseId)
-    .populate('judgeIds')
-    .populate('prosecutorIds')
-    .populate('lawyerIds')
-    .populate('policeId');
-};
-
-const isCaseParticipant = (caseDocument: ICase, userId: string, role: UserRole): boolean => {
-  const normalizedUserId = userId.toString();
-
-  if (role === UserRole.POLICE) {
-    return caseDocument.policeId?.toString() === normalizedUserId;
-  }
-
-  if (role === UserRole.PROSECUTOR) {
-    return caseDocument.prosecutorIds?.some(id => id.toString() === normalizedUserId) || false;
-  }
-
-  if (role === UserRole.JUDGE) {
-    return caseDocument.judgeIds?.some(id => id.toString() === normalizedUserId) || false;
-  }
-
-  if (role === UserRole.LAWYER) {
-    return caseDocument.lawyerIds?.some(id => id.toString() === normalizedUserId) || false;
-  }
-
-  return false;
-};
 
 /**
  * 提交质证意见（律师）
@@ -73,7 +42,7 @@ export const submitObjection: ControllerHandler = async (req, res, next) => {
     }
 
     // 验证权限：律师必须关联到该案件
-    if (!caseDoc.lawyerIds?.some((id: any) => id.toString() === currentUser.userId)) {
+    if (!caseDoc.plaintiffLawyerIds||caseDoc.defendantLawyerIds?.some((id: any) => id.toString() === currentUser.userId)) {
       throw new ForbiddenError('Forbidden: Not assigned to this case');
     }
 
@@ -241,7 +210,7 @@ export const handleObjection: ControllerHandler = async (req, res, next) => {
       throw new NotFoundError('Case not found');
     }
 
-    if (!caseDoc.judgeIds?.some((id: any) => id.toString() === currentUser.userId)) {
+    if (!(caseDoc.judgeId?.toString() === currentUser.userId)) {
       throw new ForbiddenError('Forbidden: Not assigned to this case');
     }
 

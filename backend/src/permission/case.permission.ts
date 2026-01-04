@@ -27,18 +27,3 @@ export const isCaseParticipant = (caseDoc: ICase, user: AuthenticatedUserPayload
     }
   };
   
-  export const loadAndCheckCase = async (
-    caseId: string,
-    user?: AuthenticatedUserPayload
-  ) => {
-    if (!user) throw new ForbiddenError('Authentication required');
-  
-    const caseDoc = await Case.findById(caseId);
-    if (!caseDoc) throw new NotFoundError('Case not found');
-  
-    if (!isCaseParticipant(caseDoc, user)) {
-      throw new ForbiddenError('You are not assigned to this case');
-    }
-  
-    return caseDoc;
-  };

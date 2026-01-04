@@ -1,104 +1,26 @@
 // 辩护材料控制器
 import { NextFunction, Response } from 'express';
-import crypto from 'crypto';
 import { AuthRequest, AuthenticatedUserPayload } from '../middleware/auth';
 import { UserRole } from '../models/users.model';
 import { CaseStatus } from '../models/case.model';
-import Case, { ICase } from '../models/case.model';
-import DefenseMaterial, { IDefenseMaterial, CreateDefenseMaterialDTO, UpdateDefenseMaterialDTO, AddMaterialBody } from '../models/defense-material.model';
-import { uploadMaterialToBlockchain } from '../utils/blockchain';
 import { requireRole } from '../types/rbac';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
+import { isCaseParticipant } from '../services/case.helper.service';
+import { getCaseById } from '../services/case.service'
+import { createDefenseMaterial, deleteDefenseMaterial, getDefenseMaterialById, listDefenseMaterialsByCase, updateDefenseMaterial } from '../services/defense-material.service';
+import { CreateDefenseMaterialDTO, UpdateDefenseMaterialDTO } from '../dto/defense-material.dto';
 
-/**
- * Case Service Helper Functions
- */
-const getCaseById = async (caseId: string): Promise<ICase | null> => {
-  return Case.findById(caseId);
-};
-
-const isCaseParticipant = (caseDocument: ICase, userId: string, role: UserRole): boolean => {
-  const normalizedUserId = userId.toString();
-
-  if (role === UserRole.POLICE) {
-    return caseDocument.policeId?.toString() === normalizedUserId;
-  }
-
-  if (role === UserRole.PROSECUTOR) {
-    return caseDocument.prosecutorIds?.some(id => id.toString() === normalizedUserId) || false;
-  }
-
-  if (role === UserRole.JUDGE) {
-    return caseDocument.judgeIds?.some(id => id.toString() === normalizedUserId) || false;
-  }
-
-  if (role === UserRole.LAWYER) {
-    return caseDocument.lawyerIds?.some(id => id.toString() === normalizedUserId) || false;
-  }
-
-  return false;
-};
-
-/**
- * Defense Material Service Functions
- */
-const createDefenseMaterial = async (payload: CreateDefenseMaterialDTO): Promise<IDefenseMaterial> => {
-  const caseDocument = await Case.findById(payload.caseId);
-  if (!caseDocument) {
-    throw new NotFoundError('Case not found');
-  }
-
-  const { materialId, txHash } = await uploadMaterialToBlockchain(
-    caseDocument.caseNumber,
-    payload.fileHash
-  );
-
-  const material = new DefenseMaterial({
-    caseId: payload.caseId,
-    lawyerId: payload.lawyerId,
-    title: payload.title,
-    description: payload.description,
-    fileHash: payload.fileHash,
-    fileName: payload.fileName,
-    filePath: payload.filePath,
-    fileSize: payload.fileSize,
-    fileType: payload.fileType,
-    materialType: payload.materialType,
-    blockchainTxHash: txHash,
-    blockchainMaterialId: materialId,
-  });
-
-  return material.save();
-};
-
-const updateDefenseMaterial = async (
-  id: string,
-  updates: UpdateDefenseMaterialDTO
-): Promise<IDefenseMaterial> => {
-  const updated = await DefenseMaterial.findByIdAndUpdate(id, updates, { new: true });
-  if (!updated) {
-    throw new NotFoundError('Defense material not found');
-  }
-  return updated;
-};
-
-const deleteDefenseMaterial = async (id: string): Promise<void> => {
-  const deleted = await DefenseMaterial.findByIdAndDelete(id);
-  if (!deleted) {
-    throw new NotFoundError('Defense material not found');
-  }
-};
-
-const getDefenseMaterialById = async (id: string): Promise<IDefenseMaterial | null> => {
-  return DefenseMaterial.findById(id)
-    .populate('lawyerId', 'name email role')
-    .populate('caseId', 'caseNumber caseTitle status');
-};
-
-const listDefenseMaterialsByCase = async (caseId: string): Promise<IDefenseMaterial[]> => {
-  return DefenseMaterial.find({ caseId }).sort({ createdAt: -1 });
-};
+interface AddMaterialBody {
+  caseId: string;
+  title: string;
+  description?: string;
+  fileHash: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  materialType: string;
+}
 
 type ControllerHandler = (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;
 
@@ -119,7 +41,7 @@ const ensureCaseAccess = async (caseId: string, user?: AuthenticatedUserPayload,
     throw new ForbiddenError('Authentication required');
   }
 
-  const hasAccess = isCaseParticipant(caseDocument, user.userId, user.role);
+  const hasAccess = isCaseParticipant(caseDocument, user.id,user.role);
   if (!hasAccess) {
     throw new ForbiddenError('You are not assigned to this case');
   }
@@ -299,11 +221,11 @@ export const listMaterialsByCase: ControllerHandler = async (req, res, next) => 
     }
 
     const caseId = req.params.caseId;
-    
+
     // 验证用户是否是案件的参与者
     const caseDocument = await ensureCaseAccess(caseId, req.user, 'view');
     const user = req.user;
-    const hasAccess = user && isCaseParticipant(caseDocument, user.userId, user.role);
+    const hasAccess = user && isCaseParticipant(caseDocument,user.userId,user.role);
     if (!hasAccess) {
       throw new ForbiddenError('You are not assigned to this case, cannot view material list');
     }

@@ -1,23 +1,4 @@
 import mongoose, { Document, Schema } from 'mongoose';
-export interface CreateDefenseMaterialDTO {
-  caseId: string;
-  lawyerId: string;
-  title: string;
-  description?: string;
-  fileHash: string;
-  fileName: string;
-  filePath?: string;
-  fileSize: number;
-  fileType: string;
-  materialType: MaterialType;
-}
-
-export interface UpdateDefenseMaterialDTO {
-  title?: string;
-  description?: string;
-  materialType?: MaterialType;
-}
-
 
 export enum MaterialType {
   DEFENSE_BRIEF = 'defense_brief', // 辩护词
@@ -27,16 +8,11 @@ export enum MaterialType {
   OTHER = 'other', // 其他
 }
 
-
-export interface AddMaterialBody {
-  caseId: string;
-  title: string;
-  description?: string;
-  fileHash: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  materialType: string;
+export enum MeterialStatus {
+  PENDING = 'pending',
+  VERIFIED = 'verified',
+  REJECTED = 'rejected',
+  CORRECTED = 'corrected',
 }
 
 export interface IDefenseMaterial extends Document {
@@ -50,6 +26,7 @@ export interface IDefenseMaterial extends Document {
   fileSize: number; // 文件大小（字节）
   fileType: string; // MIME类型
   materialType: MaterialType; // 材料类型
+  materialStatus: MeterialStatus; // 材料状态
   blockchainTxHash?: string; // 区块链交易哈希
   blockchainMaterialId?: number; // 链上材料ID
   createdAt: Date;
@@ -100,6 +77,11 @@ const DefenseMaterialSchema = new Schema<IDefenseMaterial>(
     materialType: {
       type: String,
       enum: Object.values(MaterialType),
+      required: true,
+    },
+    materialStatus: {
+      type: String,
+      enum: Object.values(MaterialStatus),
       required: true,
     },
     blockchainTxHash: {
