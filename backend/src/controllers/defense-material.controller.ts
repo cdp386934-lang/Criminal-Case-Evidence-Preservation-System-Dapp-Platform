@@ -10,6 +10,8 @@ import { isCaseParticipant } from '../services/case.helper.service';
 import { getCaseById } from '../services/case.service'
 import { createDefenseMaterial, deleteDefenseMaterial, getDefenseMaterialById, listDefenseMaterialsByCase, updateDefenseMaterial } from '../services/defense-material.service';
 import { CreateDefenseMaterialDTO, UpdateDefenseMaterialDTO } from '../dto/defense-material.dto';
+import { recordOperation } from './operation-logs.controller';
+import { OperationType,OperationTargetType } from '../models/operation-logs.model';
 
 interface AddMaterialBody {
   caseId: string;
@@ -99,6 +101,14 @@ export const addMaterial: ControllerHandler = async (req, res, next) => {
       materialType: payload.materialType as CreateDefenseMaterialDTO['materialType'],
     });
 
+    await recordOperation({
+      req,
+      operationType:OperationType.CREATE,
+      targetType: OperationTargetType.DEFENSE_MATERIAL,
+      targetId: createdMaterial.id,
+      description: `创建辩护材料：${createdMaterial.title}`,
+    })
+
     sendSuccess(res, createdMaterial, 201);
   } catch (error) {
     next(error);
@@ -133,6 +143,13 @@ export const updateMaterial: ControllerHandler = async (req, res, next) => {
 
     const updates = req.body as UpdateDefenseMaterialDTO;
     const updated = await updateDefenseMaterial(req.params.id, updates);
+    await recordOperation({
+      req,
+      operationType:OperationType.UPDATE,
+      targetType: OperationTargetType.DEFENSE_MATERIAL,
+      targetId:material.id,
+      description: `更新辩护材料：${material.title}`,
+    })
     sendSuccess(res, updated);
   } catch (error) {
     next(error);
@@ -166,6 +183,14 @@ export const deleteMaterial: ControllerHandler = async (req, res, next) => {
     }
 
     await deleteDefenseMaterial(req.params.id);
+
+    await recordOperation({
+      req,
+      operationType:OperationType.DELETE,
+      targetType: OperationTargetType.DEFENSE_MATERIAL,
+      targetId:material.id,
+      description: `删除辩护材料：${material.title}`,
+    })
     sendSuccess(res, null, 204);
   } catch (error) {
     next(error);
@@ -200,6 +225,13 @@ export const getMaterial: ControllerHandler = async (req, res, next) => {
       throw new ForbiddenError('You are not assigned to this case, cannot view this material');
     }
 
+    await recordOperation({
+      req,
+      operationType:OperationType.GET,
+      targetType: OperationTargetType.DEFENSE_MATERIAL,
+      targetId:material.id,
+      description: `获取辩护材料：${material.title}`,
+    })
     sendSuccess(res, material);
   } catch (error) {
     next(error);
@@ -231,6 +263,13 @@ export const listMaterialsByCase: ControllerHandler = async (req, res, next) => 
     }
 
     const materials = await listDefenseMaterialsByCase(caseId);
+    await recordOperation({
+      req,
+      operationType:OperationType.BATCHGET,
+      targetType: OperationTargetType.DEFENSE_MATERIAL,
+      targetId:req.params.targetId,
+      description: `获取全部辩护材料`,
+    })
     sendSuccess(res, materials);
   } catch (error) {
     next(error);

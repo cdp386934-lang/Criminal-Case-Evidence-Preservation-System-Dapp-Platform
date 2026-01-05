@@ -1,6 +1,8 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export enum OperationType {
+  GET = 'get',
+  BATCHGET = 'batchget',
   CREATE = 'create',
   UPDATE = 'update',
   DELETE = 'delete',
