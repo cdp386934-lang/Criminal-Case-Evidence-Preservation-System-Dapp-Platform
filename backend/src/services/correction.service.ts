@@ -4,15 +4,13 @@ import Case, { CaseStatus, ICase } from '../models/case.model';
 import { AuthenticatedUserPayload } from '../middleware/auth';
 import { ForbiddenError } from '../utils/errors';
 import { UserRole } from '../models/users.model';
-import { CreateCorrectionDTO,UpdateCorrectionDTO } from '../dto/correction.dto';
+import { CreateCorrectionDTO, UpdateCorrectionDTO } from '../dto/correction.dto';
 import { NotFoundError, BadRequestError } from '../utils/errors';
 import { addCorrectionToBlockchain } from '../utils/blockchain';
 
-
-
 export const createCorrection = async (payload: CreateCorrectionDTO): Promise<ICorrection> => {
-    const caseDocument = await Case.findById(payload.caseId);
-    if (!caseDocument) {
+    const casedDoc = await Case.findById(payload.caseId);
+    if (!casedDoc) {
         throw new NotFoundError('Case not found');
     }
 
@@ -25,13 +23,13 @@ export const createCorrection = async (payload: CreateCorrectionDTO): Promise<IC
         throw new BadRequestError('Original evidence has no blockchain reference');
     }
 
-    if (originalEvidence.caseId.toString() !== caseDocument._id.toString()) {
+    if (originalEvidence.caseId.toString() !== casedDoc._id.toString()) {
         throw new BadRequestError('Original evidence does not belong to provided case');
     }
 
     const { correctionEvidenceId, txHash } = await addCorrectionToBlockchain(
         originalEvidence.blockchainEvidenceId,
-        caseDocument.caseNumber,
+        casedDoc.caseNumber,
         payload.fileHash,
         payload.reason
     );

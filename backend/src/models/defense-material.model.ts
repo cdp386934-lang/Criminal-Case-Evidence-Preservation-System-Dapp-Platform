@@ -81,7 +81,7 @@ const DefenseMaterialSchema = new Schema<IDefenseMaterial>(
     },
     materialStatus: {
       type: String,
-      enum: Object.values(MaterialStatus),
+      enum: Object.values(MeterialStatus),
       required: true,
     },
     blockchainTxHash: {

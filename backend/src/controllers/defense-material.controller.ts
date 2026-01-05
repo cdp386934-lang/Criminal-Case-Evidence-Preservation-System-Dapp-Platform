@@ -32,8 +32,8 @@ const MATERIAL_VIEW_STAGES = new Set<CaseStatus>([
 ]);
 
 const ensureCaseAccess = async (caseId: string, user?: AuthenticatedUserPayload, purpose: 'view' | 'upload' = 'view') => {
-  const caseDocument = await getCaseById(caseId);
-  if (!caseDocument) {
+  const caseDoc = await getCaseById(caseId);
+  if (!caseDoc) {
     throw new NotFoundError('Case not found');
   }
 
@@ -41,20 +41,20 @@ const ensureCaseAccess = async (caseId: string, user?: AuthenticatedUserPayload,
     throw new ForbiddenError('Authentication required');
   }
 
-  const hasAccess = isCaseParticipant(caseDocument, user.id,user.role);
+  const hasAccess = isCaseParticipant(caseDoc, user);
   if (!hasAccess) {
     throw new ForbiddenError('You are not assigned to this case');
   }
 
-  if (purpose === 'upload' && !MATERIAL_UPLOAD_STAGES.has(caseDocument.status)) {
+  if (purpose === 'upload' && !MATERIAL_UPLOAD_STAGES.has(caseDoc.status)) {
     throw new ForbiddenError('Defense materials can only be submitted during court trial');
   }
 
-  if (purpose === 'view' && !MATERIAL_VIEW_STAGES.has(caseDocument.status) && user.role === UserRole.LAWYER) {
+  if (purpose === 'view' && !MATERIAL_VIEW_STAGES.has(caseDoc.status) && user.role === UserRole.LAWYER) {
     throw new ForbiddenError('Lawyers can only view materials during or after court trial');
   }
 
-  return caseDocument;
+  return caseDoc;
 };
 
 /**
@@ -124,7 +124,7 @@ export const updateMaterial: ControllerHandler = async (req, res, next) => {
     }
 
     // 验证用户是否是案件的参与者
-    const caseDocument = await ensureCaseAccess(material.caseId.toString(), currentUser, 'upload');
+    const caseDoc = await ensureCaseAccess(material.caseId.toString(), currentUser, 'upload');
 
     // 验证是否是材料的上传者：只有上传者可以更新自己上传的材料
     if (material.lawyerId.toString() !== currentUser.userId) {
@@ -158,7 +158,7 @@ export const deleteMaterial: ControllerHandler = async (req, res, next) => {
     }
 
     // 验证用户是否是案件的参与者
-    const caseDocument = await ensureCaseAccess(material.caseId.toString(), currentUser, 'upload');
+    const caseDoc = await ensureCaseAccess(material.caseId.toString(), currentUser, 'upload');
 
     // 验证是否是材料的上传者：只有上传者可以删除自己上传的材料
     if (material.lawyerId.toString() !== currentUser.userId) {
@@ -193,9 +193,9 @@ export const getMaterial: ControllerHandler = async (req, res, next) => {
     }
 
     // 验证用户是否是案件的参与者
-    const caseDocument = await ensureCaseAccess(material.caseId.toString(), req.user, 'view');
+    const caseDoc = await ensureCaseAccess(material.caseId.toString(), req.user, 'view');
     const user = req.user;
-    const hasAccess = user && isCaseParticipant(caseDocument, user.userId, user.role);
+    const hasAccess = user && isCaseParticipant(caseDoc, user);
     if (!hasAccess) {
       throw new ForbiddenError('You are not assigned to this case, cannot view this material');
     }
@@ -223,9 +223,9 @@ export const listMaterialsByCase: ControllerHandler = async (req, res, next) => 
     const caseId = req.params.caseId;
 
     // 验证用户是否是案件的参与者
-    const caseDocument = await ensureCaseAccess(caseId, req.user, 'view');
+    const caseDoc = await ensureCaseAccess(caseId, req.user, 'view');
     const user = req.user;
-    const hasAccess = user && isCaseParticipant(caseDocument,user.userId,user.role);
+    const hasAccess = user && isCaseParticipant(caseDoc, user);
     if (!hasAccess) {
       throw new ForbiddenError('You are not assigned to this case, cannot view material list');
     }

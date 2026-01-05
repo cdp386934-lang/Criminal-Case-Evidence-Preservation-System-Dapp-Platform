@@ -61,7 +61,7 @@ app.use('/api/evidence', evidenceRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/objections', objectionRoutes);
-app.use('api/operation-logs',operationLogRoutes)
+app.use('/api/operation-logs', operationLogRoutes);
 app.use('/api/users', userRoutes);
 
 

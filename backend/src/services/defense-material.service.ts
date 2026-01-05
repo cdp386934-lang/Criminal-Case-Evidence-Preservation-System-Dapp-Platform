@@ -5,13 +5,13 @@ import DefenseMaterial,{ IDefenseMaterial } from "../models/defense-material.mod
 import  Case from "../models/case.model";
 
 export const createDefenseMaterial = async (payload: CreateDefenseMaterialDTO): Promise<IDefenseMaterial> => {
-    const caseDocument = await Case.findById(payload.caseId);
-    if (!caseDocument) {
+    const casedDoc = await Case.findById(payload.caseId);
+    if (!casedDoc) {
       throw new NotFoundError('Case not found');
     }
   
     const { materialId, txHash } = await uploadMaterialToBlockchain(
-      caseDocument.caseNumber,
+      casedDoc.caseNumber,
       payload.fileHash
     );
   

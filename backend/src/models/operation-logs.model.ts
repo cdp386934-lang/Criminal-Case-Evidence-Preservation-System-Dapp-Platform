@@ -1,20 +1,23 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export enum OperationType {
-  EVIDENCE_UPLOAD = 'evidence_upload',
-  EVIDENCE_VERIFY = 'evidence_verify',
-  EVIDENCE_CORRECT = 'evidence_correct',
-  OBJECTION_SUBMIT = 'objection_submit',
-  OBJECTION_HANDLE = 'objection_handle',
-  CASE_CREATE = 'case_create',
-  CASE_UPDATE = 'case_update',
-  CASE_DELETE = 'case_delete',
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  FIND = 'find',
+  VERIFY = 'verify',
+  SUBMIT = 'submit',
+  HANDLE = 'handle',
 }
+
 
 export enum OperationTargetType {
   CASE = 'case',
+  CORRECTION = 'correction',
+  DEFENSE_MATERIAL = 'defense_material',
   EVIDENCE = 'evidence',
   OBJECTION = 'objection',
+  USER = 'user',
 }
 
 export interface IOperationLog extends Document {

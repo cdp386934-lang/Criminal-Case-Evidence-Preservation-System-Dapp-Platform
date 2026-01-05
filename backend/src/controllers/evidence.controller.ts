@@ -8,10 +8,21 @@ import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors'
 import { sendSuccess } from '../utils/response';
 import * as notificationUtils from '../utils/notification';
 import { NotificationType, NotificationPriority } from '../models/notification.model';
-import {getCaseById} from '../services/case.service';     
+import { getCaseById } from '../services/case.service';
 import { isCaseParticipant } from '../services/case.helper.service';
-import { createEvidence, deleteEvidenceInternal, getEvidenceById, listEvidenceByCaseInternal, updateEvidenceInternal } from '../services/evidence.service';
+import {
+  createEvidence,
+  deleteEvidenceInternal,
+  getEvidenceById,
+  listEvidenceByCaseInternal,
+  updateEvidenceInternal,
+} from '../services/evidence.service';
 import { CreateEvidenceDTO, UpdateEvidenceDTO } from '../dto/evidence.dto';
+import {
+  OperationType,
+  OperationTargetType,
+} from '../models/operation-logs.model';
+import { recordOperation } from './operation-logs.controller';
 
 interface AddEvidenceBody {
   caseId: string;
@@ -32,7 +43,7 @@ type EvidenceAction = 'view' | 'upload' | 'modify';
 const POLICE_EVIDENCE_STAGES = new Set<CaseStatus>([CaseStatus.INVESTIGATION]);
 
 // 检察官上传证据阶段：仅在“移送审查起诉”阶段允许
-const PROSECUTOR_UPLOAD_STAGES = new Set<CaseStatus>([CaseStatus.PROSECUTORATE,CaseStatus.COURT_TRIAL]);
+const PROSECUTOR_UPLOAD_STAGES = new Set<CaseStatus>([CaseStatus.PROSECUTORATE, CaseStatus.COURT_TRIAL]);
 
 const JUDGE_UPLOAD_STAGES = new Set<CaseStatus>([CaseStatus.COURT_TRIAL]);
 
@@ -49,8 +60,8 @@ const ensureCaseAccess = async (
   user: AuthenticatedUserPayload | undefined,
   action: EvidenceAction
 ) => {
-  const caseDocument = await getCaseById(caseId);
-  if (!caseDocument) {
+  const caseDoc = await getCaseById(caseId);
+  if (!caseDoc) {
     throw new NotFoundError('Case not found');
   }
 
@@ -58,44 +69,44 @@ const ensureCaseAccess = async (
     throw new ForbiddenError('Authentication required');
   }
 
-  const hasAccess = isCaseParticipant(caseDocument, user.userId, user.role);
+  const hasAccess = isCaseParticipant(caseDoc, user);
   if (!hasAccess) {
     throw new ForbiddenError('You are not assigned to this case');
   }
 
   // 禁止在判决/结案后修改或新增证据
-  if (action !== 'view' && [CaseStatus.CLOSED].includes(caseDocument.status)) {
+  if (action !== 'view' && [CaseStatus.CLOSED].includes(caseDoc.status)) {
     throw new ForbiddenError('Case is already adjudicated and evidence cannot be changed');
   }
 
   if (user.role === UserRole.POLICE) {
-    if (!POLICE_EVIDENCE_STAGES.has(caseDocument.status)) {
+    if (!POLICE_EVIDENCE_STAGES.has(caseDoc.status)) {
       throw new ForbiddenError('Police cannot access evidence after the case is transferred');
     }
   }
 
   if (user.role === UserRole.PROSECUTOR) {
-    if (action !== 'view' && !PROSECUTOR_UPLOAD_STAGES.has(caseDocument.status)) {
+    if (action !== 'view' && !PROSECUTOR_UPLOAD_STAGES.has(caseDoc.status)) {
       throw new ForbiddenError('Prosecutors can only submit evidence during review or prosecution stages');
     }
   }
 
   if (user.role === UserRole.JUDGE) {
-    if (![CaseStatus.COURT_TRIAL, CaseStatus.CLOSED].includes(caseDocument.status)) {
+    if (![CaseStatus.COURT_TRIAL, CaseStatus.CLOSED].includes(caseDoc.status)) {
       throw new ForbiddenError('Judges can only access evidence for prosecuted cases');
     }
-    if (action !== 'view' && !JUDGE_UPLOAD_STAGES.has(caseDocument.status)) {
+    if (action !== 'view' && !JUDGE_UPLOAD_STAGES.has(caseDoc.status)) {
       throw new ForbiddenError('Judges can only add evidence during court trial');
     }
   }
 
   if (user.role === UserRole.LAWYER) {
-    if (!LAWYER_VIEW_STAGES.has(caseDocument.status)) {
+    if (!LAWYER_VIEW_STAGES.has(caseDoc.status)) {
       throw new ForbiddenError('Lawyers can only access evidence for valid case stages');
     }
   }
 
-  return caseDocument;
+  return caseDoc;
 };
 
 /**
@@ -130,7 +141,7 @@ export const addEvidence: ControllerHandler = async (req, res, next) => {
     }
 
     // 验证案件权限与阶段
-    const caseDocument = await ensureCaseAccess(payload.caseId, currentUser, 'upload');
+    const caseDoc = await ensureCaseAccess(payload.caseId, currentUser, 'upload');
 
     // 创建证据
     const createdEvidence = await createEvidence({
@@ -147,17 +158,25 @@ export const addEvidence: ControllerHandler = async (req, res, next) => {
 
     // 自动推送通知给案件参与者（排除上传者自己）
     await notificationUtils.createNotificationsForCaseParticipants(
-      caseDocument,
+      caseDoc,
       {
         senderId: currentUser.userId,
         type: NotificationType.EVIDENCE_UPLOADED,
         title: '新证据已上传',
-        content: `案件 ${caseDocument.caseNumber} 中已上传新证据：${createdEvidence.title}，请及时查看。`,
+        content: `案件 ${caseDoc.caseNumber} 中已上传新证据：${createdEvidence.title}，请及时查看。`,
         priority: NotificationPriority.HIGH,
-        relatedCaseId: caseDocument._id.toString(),
+        relatedCaseId: caseDoc._id.toString(),
         relatedEvidenceId: createdEvidence._id.toString(),
       }
     );
+
+    await recordOperation({
+      req,
+      operationType: OperationType.CREATE,
+      targetType: OperationTargetType.EVIDENCE,
+      targetId: createdEvidence._id.toString(),
+      description: `Uploaded evidence ${createdEvidence.evidenceId} for case ${caseDoc.caseNumber}`,
+    });
 
     sendSuccess(res, createdEvidence, 201);
   } catch (error) {
@@ -175,7 +194,7 @@ export const addEvidence: ControllerHandler = async (req, res, next) => {
 export const updateEvidence: ControllerHandler = async (req, res, next) => {
   try {
     // 验证用户角色
-    const currentUser = requireRole(req.user, [UserRole.PROSECUTOR, UserRole.LAWYER, UserRole.POLICE,UserRole.JUDGE]);
+    const currentUser = requireRole(req.user, [UserRole.PROSECUTOR, UserRole.LAWYER, UserRole.POLICE, UserRole.JUDGE]);
 
     // 检查证据是否存在
     const evidence = await getEvidenceById(req.params.id);
@@ -184,7 +203,7 @@ export const updateEvidence: ControllerHandler = async (req, res, next) => {
     }
 
     // 验证用户是否是案件的参与者及阶段限制
-    const caseDocument = await ensureCaseAccess(evidence.caseId.toString(), currentUser, 'modify');
+    const caseDoc = await ensureCaseAccess(evidence.caseId.toString(), currentUser, 'modify');
 
     // 验证是否是证据的上传者：只有上传者可以更新自己上传的证据
     if (evidence.uploaderId.toString() !== currentUser.userId) {
@@ -193,6 +212,15 @@ export const updateEvidence: ControllerHandler = async (req, res, next) => {
 
     const updates = req.body as UpdateEvidenceDTO;
     const updated = await updateEvidenceInternal(req.params.id, updates);
+
+    await recordOperation({
+      req,
+      operationType: OperationType.UPDATE,
+      targetType: OperationTargetType.EVIDENCE,
+      targetId: updated._id.toString(),
+      description: `Updated evidence ${updated.evidenceId}`,
+    });
+
     sendSuccess(res, updated);
   } catch (error) {
     next(error);
@@ -218,7 +246,7 @@ export const deleteEvidence: ControllerHandler = async (req, res, next) => {
     }
 
     // 验证用户是否是案件的参与者及阶段限制
-    const caseDocument = await ensureCaseAccess(evidence.caseId.toString(), currentUser, 'modify');
+    const caseDoc = await ensureCaseAccess(evidence.caseId.toString(), currentUser, 'modify');
 
     // 验证是否是证据的上传者：只有上传者可以删除自己上传的证据
     if (evidence.uploaderId.toString() !== currentUser.userId) {
@@ -226,6 +254,15 @@ export const deleteEvidence: ControllerHandler = async (req, res, next) => {
     }
 
     await deleteEvidenceInternal(req.params.id);
+
+    await recordOperation({
+      req,
+      operationType: OperationType.DELETE,
+      targetType: OperationTargetType.EVIDENCE,
+      targetId: evidence._id.toString(),
+      description: `Deleted evidence ${evidence.evidenceId}`,
+    });
+
     sendSuccess(res, null, 204);
   } catch (error) {
     next(error);
@@ -253,9 +290,9 @@ export const getEvidence: ControllerHandler = async (req, res, next) => {
     }
 
     // 验证用户是否是案件的参与者
-    const caseDocument = await ensureCaseAccess(evidence.caseId.toString(), req.user, 'view');
+    const caseDoc = await ensureCaseAccess(evidence.caseId.toString(), req.user, 'view');
     const user = req.user;
-    const hasAccess = user && isCaseParticipant(caseDocument, user.userId, user.role);
+    const hasAccess = user && isCaseParticipant(caseDoc, user);
     if (!hasAccess) {
       throw new ForbiddenError('You are not assigned to this case, cannot view this evidence');
     }
@@ -281,11 +318,11 @@ export const listEvidenceByCase: ControllerHandler = async (req, res, next) => {
     }
 
     const caseId = req.params.caseId;
-    
+
     // 验证用户是否是案件的参与者
-    const caseDocument = await ensureCaseAccess(caseId, req.user, 'view');
+    const caseDoc = await ensureCaseAccess(caseId, req.user, 'view');
     const user = req.user;
-    const hasAccess = user && isCaseParticipant(caseDocument, user.userId, user.role);
+    const hasAccess = user && isCaseParticipant(caseDoc, user);
     if (!hasAccess) {
       throw new ForbiddenError('You are not assigned to this case, cannot view evidence list');
     }

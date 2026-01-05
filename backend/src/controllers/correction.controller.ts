@@ -3,12 +3,22 @@ import { AuthRequest } from '../middleware/auth';
 import { UserRole } from '../models/users.model';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
-import { createCorrection, getCorrectionById, updateCorrectionInternal,listCorrectionsByEvidence} from '../services/correction.service';
+import {
+  createCorrection,
+  getCorrectionById,
+  updateCorrectionInternal,
+  listCorrectionsByEvidence,
+} from '../services/correction.service';
 import { requireRole } from '../types/rbac';
 import { CaseStatus } from '../models/case.model';
 import { getEvidenceById } from '../services/evidence.service';
-import {ensureParticipant} from '../services/case.helper.service'
+import { loadAndCheckCase } from '../services/case.helper.service';
 import { UpdateCorrectionDTO } from '../dto/correction.dto';
+import {
+  OperationType,
+  OperationTargetType,
+} from '../models/operation-logs.model';
+import { recordOperation } from './operation-logs.controller';
 interface AddCorrectionBody {
   caseId: string;
   originalEvidenceId: string;
@@ -34,12 +44,12 @@ export const addCorrection: ControllerHandler = async (req, res, next) => {
       throw new BadRequestError('Original evidence does not belong to the provided case');
     }
 
-    const caseDocument = await ensureParticipant(payload.caseId, currentUser);
+    const caseDoc = await loadAndCheckCase(payload.caseId, currentUser);
 
-    if (!caseDocument.prosecutorIds?.some((prosecutorId) => prosecutorId.toString() === currentUser.userId)) {
+    if (!caseDoc.prosecutorIds?.some((prosecutorId) => prosecutorId.toString() === currentUser.userId)) {
       throw new ForbiddenError('Only the assigned prosecutor can submit corrections');
     }
-    if (![CaseStatus.PROSECUTORATE].includes(caseDocument.status)) {
+    if (![CaseStatus.PROSECUTORATE].includes(caseDoc.status)) {
       throw new ForbiddenError('Corrections can only be submitted during review or prosecution');
     }
 
@@ -49,6 +59,14 @@ export const addCorrection: ControllerHandler = async (req, res, next) => {
       submittedBy: currentUser.userId,
       reason: payload.reason,
       fileHash: payload.fileHash,
+    });
+
+    await recordOperation({
+      req,
+      operationType: OperationType.CREATE,
+      targetType: OperationTargetType.CORRECTION,
+      targetId: created._id.toString(),
+      description: `Created correction for evidence ${evidence.evidenceId} in case ${caseDoc.caseNumber}`,
     });
 
     sendSuccess(res, created, 201);
@@ -66,22 +84,31 @@ export const updateCorrection: ControllerHandler = async (req, res, next) => {
       throw new NotFoundError('Correction not found');
     }
 
-    const caseDocument = await ensureParticipant(correction.caseId.toString(), currentUser);
+    const caseDoc = await loadAndCheckCase(correction.caseId.toString(), currentUser);
     if (
       currentUser.role === UserRole.PROSECUTOR &&
-      (!caseDocument.prosecutorIds?.some((prosecutorId) => prosecutorId.toString() === currentUser.userId))
+      (!caseDoc.prosecutorIds?.some((prosecutorId) => prosecutorId.toString() === currentUser.userId))
     ) {
       throw new ForbiddenError('Only the assigned prosecutor can update this correction');
     }
     if (
       currentUser.role === UserRole.PROSECUTOR &&
-      ![CaseStatus.PROSECUTORATE].includes(caseDocument.status)
+      ![CaseStatus.PROSECUTORATE].includes(caseDoc.status)
     ) {
       throw new ForbiddenError('Corrections can only be modified during review or prosecution');
     }
 
     const updates = req.body as UpdateCorrectionDTO;
     const updated = await updateCorrectionInternal(req.params.id, updates);
+
+    await recordOperation({
+      req,
+      operationType: OperationType.UPDATE,
+      targetType: OperationTargetType.CORRECTION,
+      targetId: updated._id.toString(),
+      description: `Updated correction ${updated._id.toString()}`,
+    });
+
     sendSuccess(res, updated);
   } catch (error) {
     next(error);
@@ -97,15 +124,24 @@ export const deleteCorrection: ControllerHandler = async (req, res, next) => {
       throw new NotFoundError('Correction not found');
     }
 
-    const caseDocument = await ensureParticipant(correction.caseId.toString(), currentUser);
-    if (!caseDocument.prosecutorIds?.some((prosecutorId) => prosecutorId.toString() === currentUser.userId)) {
+    const caseDoc = await loadAndCheckCase(correction.caseId.toString(), currentUser);
+    if (!caseDoc.prosecutorIds?.some((prosecutorId) => prosecutorId.toString() === currentUser.userId)) {
       throw new ForbiddenError('Only the assigned prosecutor can delete this correction');
     }
-    if (![CaseStatus.PROSECUTORATE].includes(caseDocument.status)) {
+    if (![CaseStatus.PROSECUTORATE].includes(caseDoc.status)) {
       throw new ForbiddenError('Corrections can only be removed during review or prosecution');
     }
 
-    await updateCorrectionInternal(req.params.id,req.body as UpdateCorrectionDTO);
+    await updateCorrectionInternal(req.params.id, req.body as UpdateCorrectionDTO);
+
+    await recordOperation({
+      req,
+      operationType: OperationType.DELETE,
+      targetType: OperationTargetType.CORRECTION,
+      targetId: correction._id.toString(),
+      description: `Deleted correction ${correction._id.toString()}`,
+    });
+
     sendSuccess(res, null, 204);
   } catch (error) {
     next(error);
@@ -119,7 +155,7 @@ export const getCorrection: ControllerHandler = async (req, res, next) => {
       throw new NotFoundError('Correction not found');
     }
 
-    await ensureParticipant(correction.caseId.toString(), req.user);
+    await loadAndCheckCase(correction.caseId.toString(), req.user);
     sendSuccess(res, correction);
   } catch (error) {
     next(error);
@@ -133,7 +169,7 @@ export const listCorrections: ControllerHandler = async (req, res, next) => {
       throw new NotFoundError('Evidence not found');
     }
 
-    await ensureParticipant(evidence.caseId.toString(), req.user);
+    await loadAndCheckCase(evidence.caseId.toString(), req.user);
     const corrections = await listCorrectionsByEvidence(req.params.evidenceId);
     sendSuccess(res, corrections);
   } catch (error) {

@@ -89,28 +89,28 @@ export const createNotificationsByRoles = async (
 
 /**
  * 为案件参与者创建通知
- * @param caseDocument 案件文档
+ * @param casedDoc 案件文档
  * @param params 通知参数（不包含userId）
  */
 export const createNotificationsForCaseParticipants = async (
-  caseDocument: any,
+  casedDoc: any,
   params: Omit<CreateNotificationParams, 'userId'>
 ) => {
   try {
     const userIds: mongoose.Types.ObjectId[] = [];
 
     // 收集所有参与者ID
-    if (caseDocument.policeId) {
-      userIds.push(caseDocument.policeId);
+    if (casedDoc.policeId) {
+      userIds.push(casedDoc.policeId);
     }
-    if (caseDocument.prosecutorIds && caseDocument.prosecutorIds.length > 0) {
-      userIds.push(...caseDocument.prosecutorIds);
+    if (casedDoc.prosecutorIds && casedDoc.prosecutorIds.length > 0) {
+      userIds.push(...casedDoc.prosecutorIds);
     }
-    if (caseDocument.judgeIds && caseDocument.judgeIds.length > 0) {
-      userIds.push(...caseDocument.judgeIds);
+    if (casedDoc.judgeIds && casedDoc.judgeIds.length > 0) {
+      userIds.push(...casedDoc.judgeIds);
     }
-    if (caseDocument.lawyerIds && caseDocument.lawyerIds.length > 0) {
-      userIds.push(...caseDocument.lawyerIds);
+    if (casedDoc.lawyerIds && casedDoc.lawyerIds.length > 0) {
+      userIds.push(...casedDoc.lawyerIds);
     }
 
     // 去重

@@ -7,12 +7,12 @@ import { CreateEvidenceDTO, UpdateEvidenceDTO } from "../dto/evidence.dto";
 
 
 export const createEvidence = async (payload: CreateEvidenceDTO): Promise<IEvidence> => {
-    const caseDocument = await Case.findById(payload.caseId);
-    if (!caseDocument) {
+    const casedDoc = await Case.findById(payload.caseId);
+    if (!casedDoc) {
       throw new NotFoundError('Case not found');
     }
   
-    const { evidenceId, txHash } = await addEvidenceToBlockchain(caseDocument.caseNumber, payload.fileHash);
+    const { evidenceId, txHash } = await addEvidenceToBlockchain(casedDoc.caseNumber, payload.fileHash);
     const evidenceUUID = crypto.randomUUID();
   
     const evidence = new Evidence({

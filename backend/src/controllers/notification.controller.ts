@@ -6,7 +6,6 @@ import { requireRole } from '../types/rbac';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
 import * as notificationUtils from '../utils/notification';
-import User from '../models/users.model';
 import mongoose from 'mongoose';
 
 type ControllerHandler = (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;

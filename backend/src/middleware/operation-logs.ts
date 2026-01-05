@@ -1,5 +1,5 @@
 import { NextFunction, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import mongoose from 'mongoose';
 import OperationLog, {
   OperationType,
   OperationTargetType,
@@ -26,22 +26,24 @@ export const withOperationLog =
     try {
       // 给每个请求生成 requestId（如不存在）
       if (!req.requestId) {
-        req.requestId = uuidv4();
+        // 使用时间戳 + 随机数简单生成一个 requestId，避免额外依赖
+        req.requestId = `req_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
       }
 
       // 在 response 结束后记录日志
       res.on('finish', async () => {
         try {
-          // 只记录成功请求
+          // 只记录成功请求，且要求有登录用户
           if (res.statusCode >= 200 && res.statusCode < 300 && req.user) {
-            const targetId = options.getTargetId(req);
-            if (!targetId) return;
+            const targetIdStr = options.getTargetId(req);
+            if (!targetIdStr) return;
 
             await OperationLog.create({
               userId: req.user.userId,
               operationType: options.operationType,
               targetType: options.targetType,
-              targetId,
+              // 与模型保持一致，存为 ObjectId
+              targetId: new mongoose.Types.ObjectId(targetIdStr),
               description:
                 typeof options.description === 'function'
                   ? options.description(req)

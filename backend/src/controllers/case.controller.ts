@@ -1,25 +1,34 @@
 import { NextFunction, Response } from 'express';
 import { AuthRequest, AuthenticatedUserPayload } from '../middleware/auth';
 import { UserRole } from '../models/users.model';
-import Case, { CaseStatus, CaseType, MoveCaseNextStageBody, ICase } from '../models/case.model';
+import Case, {
+  CaseStatus,
+  CaseType,
+  MoveCaseNextStageBody,
+  ICase,
+} from '../models/case.model';
 import CaseTimeline from '../models/case-timeline.model';
-import OperationLog from '../models/operation-logs.model';
+import {
+  OperationType,
+  OperationTargetType,
+} from '../models/operation-logs.model';
 import { requireRole } from '../types/rbac';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
-import {isCaseParticipant,loadAndCheckCase} from '../services/case.helper.service'
+import { isCaseParticipant, loadAndCheckCase } from '../services/case.helper.service';
+import { recordOperation } from './operation-logs.controller';
 interface AddCaseBody {
-    caseNumber: string;
-    caseTitle: string;
-    caseType: CaseType;
-    description?: string;
-    plaintiffMessage?: string;
-    defendantMessage?: string;
-    prosecutorIds?: string[];       // 公诉案件 - 检察官ID
-    judgeIds?: string[];            // 通用 - 法官ID
-    plaintiffLawyerIds?: string[];  // 民事诉讼 - 原告律师ID
-    defendantLawyerIds?: string[];  // 民事诉讼 - 被告律师ID
-    lawyerIds?: string[];           // 公诉案件 - 律师ID（通用）
+  caseNumber: string;
+  caseTitle: string;
+  caseType: CaseType;
+  description?: string;
+  plaintiffMessage?: string;
+  defendantMessage?: string;
+  prosecutorIds?: string[];       // 公诉案件 - 检察官ID
+  judgeIds?: string[];            // 通用 - 法官ID
+  plaintiffLawyerIds?: string[];  // 民事诉讼 - 原告律师ID
+  defendantLawyerIds?: string[];  // 民事诉讼 - 被告律师ID
+  lawyerIds?: string[];           // 公诉案件 - 律师ID（通用）
 }
 /* =====================================================
    案件状态流转配置
@@ -46,28 +55,6 @@ const canTransition = (
 ) =>
   WORKFLOW_TRANSITIONS[current]?.[role]?.includes(target) ?? false;
 
-/* =====================================================
-   OperationLog 统一记录函数
-===================================================== */
-
-const recordOperation = async (
-  req: AuthRequest,
-  action: string,
-  targetId: string,
-  detail?: any
-) => {
-  if (!req.user) return;
-
-  await OperationLog.create({
-    operatorId: req.user.userId,
-    operatorRole: req.user.role,
-    action,
-    targetType: 'CASE',
-    targetId,
-    detail,
-    ip: req.ip,
-  });
-};
 
 /* =====================================================
    Controller
@@ -122,8 +109,12 @@ export const addCase = async (req: AuthRequest, res: Response, next: NextFunctio
       timestamp: new Date(),
     });
 
-    await recordOperation(req, 'CASE_CREATE', created._id.toString(), {
-      caseNumber: created.caseNumber,
+    await recordOperation({
+      req,
+      operationType: OperationType.CREATE,
+      targetType: OperationTargetType.CASE,
+      targetId: created._id.toString(),
+      description: `Created case ${created.caseNumber}`,
     });
 
     sendSuccess(res, created, 201);
@@ -140,12 +131,18 @@ export const updateCase = async (req: AuthRequest, res: Response, next: NextFunc
       UserRole.JUDGE,
     ]);
 
-    const caseDoc = await loadAndCheckCase(user.id,);
+    const caseDoc = await loadAndCheckCase(req.params.id, user);
 
     Object.assign(caseDoc, req.body);
     await caseDoc.save();
 
-    await recordOperation(req, 'CASE_UPDATE', caseDoc._id.toString(), req.body);
+    await recordOperation({
+      req,
+      operationType: OperationType.UPDATE,
+      targetType: OperationTargetType.CASE,
+      targetId: caseDoc._id.toString(),
+      description: `Updated case ${caseDoc.caseNumber}`,
+    });
 
     sendSuccess(res, caseDoc);
   } catch (e) {
@@ -157,10 +154,16 @@ export const deleteCase = async (req: AuthRequest, res: Response, next: NextFunc
   try {
     const user = requireRole(req.user, [UserRole.POLICE, UserRole.JUDGE]);
 
-    const caseDoc = await loadAndCheckCase(user.id, user);
+    const caseDoc = await loadAndCheckCase(req.params.id, user);
     await caseDoc.deleteOne();
 
-    await recordOperation(req, 'CASE_DELETE', req.params.id);
+    await recordOperation({
+      req,
+      operationType: OperationType.DELETE,
+      targetType: OperationTargetType.CASE,
+      targetId: caseDoc._id.toString(),
+      description: `Deleted case ${caseDoc.caseNumber}`,
+    });
 
     sendSuccess(res, null, 204);
   } catch (e) {
@@ -187,15 +190,15 @@ export const listCases = async (req: AuthRequest, res: Response, next: NextFunct
       user.role === UserRole.POLICE
         ? { policeId: user.userId }
         : user.role === UserRole.PROSECUTOR
-        ? { prosecutorIds: user.userId }
-        : user.role === UserRole.JUDGE
-        ? { judgeId: user.userId }
-        : {
-            $or: [
-              { plaintiffLawyerIds: user.userId },
-              { defendantLawyerIds: user.userId },
-            ],
-          };
+          ? { prosecutorIds: user.userId }
+          : user.role === UserRole.JUDGE
+            ? { judgeId: user.userId }
+            : {
+              $or: [
+                { plaintiffLawyerIds: user.userId },
+                { defendantLawyerIds: user.userId },
+              ],
+            };
 
     const cases = await Case.find(query).sort({ createdAt: -1 });
     sendSuccess(res, cases);
@@ -231,6 +234,7 @@ export const moveCaseNextStage = async (
       throw new BadRequestError('Transition not allowed');
     }
 
+    const fromStatus = caseDoc.status;
     caseDoc.status = payload.targetStatus;
     await caseDoc.save();
 
@@ -242,10 +246,12 @@ export const moveCaseNextStage = async (
       comment: payload.comment,
       timestamp: new Date(),
     });
-
-    await recordOperation(req, 'CASE_STATUS_CHANGE', caseDoc._id.toString(), {
-      from: caseDoc.status,
-      to: payload.targetStatus,
+    await recordOperation({
+      req,
+      operationType: OperationType.UPDATE,
+      targetType: OperationTargetType.CASE,
+      targetId: caseDoc._id.toString(),
+      description: `Changed case ${caseDoc.caseNumber} status from ${fromStatus} to ${payload.targetStatus}`,
     });
 
     sendSuccess(res, caseDoc);

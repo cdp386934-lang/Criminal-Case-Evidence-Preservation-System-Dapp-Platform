@@ -30,6 +30,7 @@ export interface AuthRequest<
   Locals extends Record<string, unknown> = Record<string, unknown>
 > extends Request<P, ResBody, ReqBody, ReqQuery, Locals> {
   user?: AuthenticatedUserPayload;
+  requestId?: string;
 }
 
 export const authenticate = async (

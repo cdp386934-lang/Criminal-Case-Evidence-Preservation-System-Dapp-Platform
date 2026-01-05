@@ -6,14 +6,18 @@ import { UserRole } from '../models/users.model';
 import Case, { ICase } from '../models/case.model';
 import Evidence from '../models/evidence.model';
 import Objection, { IObjection, ObjectionStatus } from '../models/objection.model';
-import OperationLog, { OperationType } from '../models/operation-logs.model';
+import {
+  OperationType,
+  OperationTargetType,
+} from '../models/operation-logs.model';
 import { requireRole } from '../types/rbac';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
 import * as notificationUtils from '../utils/notification';
 import { NotificationType, NotificationPriority } from '../models/notification.model';
-import {getCaseById} from '../services/case.service'
-import {isCaseParticipant} from '../services/case.helper.service';
+import { getCaseById } from '../services/case.service';
+import { isCaseParticipant } from '../services/case.helper.service';
+import { recordOperation } from './operation-logs.controller';
 
 type ControllerHandler = (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;
 
@@ -42,7 +46,7 @@ export const submitObjection: ControllerHandler = async (req, res, next) => {
     }
 
     // 验证权限：律师必须关联到该案件
-    if (!caseDoc.plaintiffLawyerIds||caseDoc.defendantLawyerIds?.some((id: any) => id.toString() === currentUser.userId)) {
+    if (!caseDoc.plaintiffLawyerIds || caseDoc.defendantLawyerIds?.some((id: any) => id.toString() === currentUser.userId)) {
       throw new ForbiddenError('Forbidden: Not assigned to this case');
     }
 
@@ -65,14 +69,12 @@ export const submitObjection: ControllerHandler = async (req, res, next) => {
     await objection.save();
 
     // 记录操作日志
-    await OperationLog.create({
-      userId: currentUser.userId,
-      operationType: OperationType.OBJECTION_SUBMIT,
-      targetType: 'objection',
-      targetId: objection._id,
+    await recordOperation({
+      req,
+      operationType: OperationType.SUBMIT,
+      targetType: OperationTargetType.OBJECTION,
+      targetId: objection._id.toString(),
       description: `Submitted objection for evidence: ${evidence.evidenceId}`,
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
     });
 
     // 通知案件参与者有新的质证意见
@@ -120,7 +122,7 @@ export const listObjections: ControllerHandler = async (req, res, next) => {
         throw new NotFoundError('Case not found');
       }
 
-      const hasAccess = isCaseParticipant(caseDoc, req.user.userId, req.user.role);
+      const hasAccess = isCaseParticipant(caseDoc, req.user);
       if (!hasAccess) {
         throw new ForbiddenError('Forbidden');
       }
@@ -175,7 +177,7 @@ export const getObjection: ControllerHandler = async (req, res, next) => {
       throw new NotFoundError('Case not found');
     }
 
-    const hasAccess = isCaseParticipant(caseDoc, req.user.userId, req.user.role);
+    const hasAccess = isCaseParticipant(caseDoc, req.user);
     if (!hasAccess) {
       throw new ForbiddenError('Forbidden');
     }
@@ -223,14 +225,12 @@ export const handleObjection: ControllerHandler = async (req, res, next) => {
     await objection.save();
 
     // 记录操作日志
-    await OperationLog.create({
-      userId: currentUser.userId,
-      operationType: OperationType.OBJECTION_HANDLE,
-      targetType: 'objection',
-      targetId: objection._id,
+    await recordOperation({
+      req,
+      operationType: OperationType.HANDLE,
+      targetType: OperationTargetType.OBJECTION,
+      targetId: objection._id.toString(),
       description: `${isAccepted ? 'Accepted' : 'Rejected'} objection: ${objection.objectionId}`,
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
     });
 
     sendSuccess(res, objection);
