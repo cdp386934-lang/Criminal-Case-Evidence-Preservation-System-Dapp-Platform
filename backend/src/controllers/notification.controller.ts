@@ -2,7 +2,7 @@ import { NextFunction, Response } from 'express';
 import { AuthRequest, AuthenticatedUserPayload } from '../middleware/auth';
 import { UserRole } from '../models/users.model';
 import Notification, { NotificationType, NotificationPriority, PushStatus } from '../models/notification.model';
-import { requireRole } from '../types/rbac';
+import { requireRole } from '../middleware/rbac';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
 import * as notificationUtils from '../utils/notification';

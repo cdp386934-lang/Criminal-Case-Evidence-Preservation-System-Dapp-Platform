@@ -2,7 +2,7 @@ import { NextFunction, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { UserRole} from '../models/users.model';
 import { RoleAssignmentModel } from '../models/role-assignment.model';
-import { requireRole } from '../types/rbac';
+import { requireRole } from '../middleware/rbac';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import {
   grantJudgeRole,

@@ -10,7 +10,7 @@ import {
   OperationType,
   OperationTargetType,
 } from '../models/operation-logs.model';
-import { requireRole } from '../types/rbac';
+import { requireRole } from '../middleware/rbac';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
 import * as notificationUtils from '../utils/notification';

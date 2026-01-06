@@ -12,11 +12,12 @@ import {
   OperationType,
   OperationTargetType,
 } from '../models/operation-logs.model';
-import { requireRole } from '../types/rbac';
+import { requireRole } from '../middleware/rbac';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
 import { isCaseParticipant, loadAndCheckCase } from '../services/case.helper.service';
 import { recordOperation } from './operation-logs.controller';
+
 interface AddCaseBody {
   caseNumber: string;
   caseTitle: string;

@@ -2,7 +2,7 @@ import { NextFunction, Response } from 'express';
 import mongoose from 'mongoose';
 import { AuthRequest } from '../middleware/auth';
 import { UserRole } from '../models/users.model';
-import { requireRole } from '../types/rbac';
+import { requireRole } from '../middleware/rbac';
 import { NotFoundError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
 import OperationLog, {

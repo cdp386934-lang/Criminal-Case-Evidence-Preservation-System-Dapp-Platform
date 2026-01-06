@@ -9,7 +9,7 @@ import {
   updateCorrectionInternal,
   listCorrectionsByEvidence,
 } from '../services/correction.service';
-import { requireRole } from '../types/rbac';
+import { requireRole } from '../middleware/rbac';
 import { CaseStatus } from '../models/case.model';
 import { getEvidenceById } from '../services/evidence.service';
 import { loadAndCheckCase } from '../services/case.helper.service';
