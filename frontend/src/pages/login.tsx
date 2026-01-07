@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src
 import { Button } from '@/src/components/ui/button'
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
-import { authApi } from '../api/auth.api'
+import { AuthApi } from '../api/auth.api'
 import { useAuthStore } from '@/store/authStore'
 import toast from 'react-hot-toast'
 import { Scale } from 'lucide-react'
@@ -39,7 +39,7 @@ export default function LoginPage() {
       console.log('📤 [登录] 发送登录请求...')
       // 调用登录API，后端会验证邮箱和密码
       // 注意：后端使用bcrypt验证密码，支持所有角色登录
-      const response = await authApi.login({ email: formData.email, password: formData.password })
+      const response = await AuthApi.login({ email: formData.email, password: formData.password })
       
       console.log('✅ [登录] 登录成功:', response)
       console.log('✅ [登录] 响应数据:', response.data)

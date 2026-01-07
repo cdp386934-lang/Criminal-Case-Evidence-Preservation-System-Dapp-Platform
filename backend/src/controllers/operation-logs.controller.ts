@@ -6,22 +6,16 @@ import { requireRole } from '../middleware/rbac';
 import { NotFoundError } from '../utils/errors';
 import { sendSuccess } from '../utils/response';
 import OperationLog, {
-  OperationType,
-  OperationTargetType,
+    OperationType,
+    OperationTargetType,
 } from '../models/operation-logs.model';
 
 type ControllerHandler = (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
 ) => Promise<void>;
 
-/**
- * 管理员：操作日志列表
- * 日志功能：分页、查询(模糊搜索)（根据时间、用户id，操作类型）
- * 这里需要按照 operationType、targetType 设置动作标注
- * 通过在各业务 Controller 中调用统一的 recordOperation 函数进行记录
- */
 export const listOperationLogs: ControllerHandler = async (req, res, next) => {
     try {
         requireRole(req.user, [UserRole.ADMIN]);
@@ -90,11 +84,7 @@ export const listOperationLogs: ControllerHandler = async (req, res, next) => {
     }
 };
 
-/**
- * =========================
- * 管理员：查看单条日志
- * =========================
- */
+
 export const getOperationLog: ControllerHandler = async (req, res, next) => {
     try {
         requireRole(req.user, [UserRole.ADMIN]);
@@ -111,41 +101,36 @@ export const getOperationLog: ControllerHandler = async (req, res, next) => {
         next(error);
     }
 };
-
-/* =====================================================
-   OperationLog 统一记录函数（供业务 Controller 调用）
-===================================================== */
-
 interface RecordOperationParams {
-  req: AuthRequest;
-  operationType: OperationType;
-  targetType: OperationTargetType;
-  targetId: string;
-  description: string;
+    req: AuthRequest;
+    operationType: OperationType;
+    targetType: OperationTargetType;
+    targetId: string;
+    description: string;
 }
 
 export const recordOperation = async ({
-  req,
-  operationType,
-  targetType,
-  targetId,
-  description,
+    req,
+    operationType,
+    targetType,
+    targetId,
+    description,
 }: RecordOperationParams): Promise<void> => {
-  if (!req.user) return;
+    if (!req.user) return;
 
-  try {
-    await OperationLog.create({
-      userId: req.user.userId,
-      operationType,
-      targetType,
-      targetId: new mongoose.Types.ObjectId(targetId),
-      description,
-      ipAddress: req.ip,
-      userAgent: req.headers['user-agent'],
-      requestId: (req as any).requestId,
-    });
-  } catch (err) {
-    // 日志失败不影响主流程
-    console.error('Failed to record operation log:', err);
-  }
+    try {
+        await OperationLog.create({
+            userId: req.user.userId,
+            operationType,
+            targetType,
+            targetId: new mongoose.Types.ObjectId(targetId),
+            description,
+            ipAddress: req.ip,
+            userAgent: req.headers['user-agent'],
+            requestId: (req as any).requestId,
+        });
+    } catch (err) {
+        // 日志失败不影响主流程
+        console.error('Failed to record operation log:', err);
+    }
 };

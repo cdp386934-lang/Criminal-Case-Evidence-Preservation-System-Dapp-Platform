@@ -3,14 +3,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import apiClient from '../api/api-client'
-import { authApi } from '../api/auth.api'
+import { AuthApi } from '../api/auth.api'
 import { useAuthStore } from '@/store/authStore'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card'
 import { User, Mail, Phone, MapPin, Wallet, Briefcase, Shield, Gavel, Scale } from 'lucide-react'
 import MainLayout from '@/src/components/layouts/main-layout'
 import { Input } from '@/src/components/ui/input'
 import { Button } from '@/src/components/ui/button'
-import { User as UserType } from '@/types/models'
+import { User as UserType } from '@/models/user.model'
 
 const API_BASE =
   (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api').replace(/\/api$/, '')
@@ -30,7 +30,7 @@ export default function ProfilePage() {
     const loadProfile = async () => {
       try {
         setLoading(true)
-        const res = await authApi.getMe()
+        const res = await AuthApi.getMe()
         const data = res.data?.data || res.data
         setUser(data)
         setForm({

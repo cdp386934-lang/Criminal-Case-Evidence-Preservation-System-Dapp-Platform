@@ -7,7 +7,7 @@ import { Button } from '@/src/components/ui/button'
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/src/components/ui/tabs'
-import { authApi } from '../api/auth.api'
+import { AuthApi } from '../api/auth.api'
 import { useWallet } from '../hooks/use-wallet'
 import toast from 'react-hot-toast'
 import { Scale, Gavel, Briefcase, Wallet, AlertCircle, LogOut, Shield, Settings } from 'lucide-react'
@@ -215,7 +215,7 @@ export default function RegisterPage() {
 
       // 发送注册请求
       // 注意：后端会验证钱包地址格式，并在链上授予角色权限
-      const response = await authApi.register(registerData, avatarFile || undefined)
+      const response = await AuthApi.register(registerData, avatarFile || undefined)
 
       console.log('✅ [注册] 注册成功:', response.data)
 

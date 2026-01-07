@@ -29,7 +29,7 @@ export function useAuth() {
 
   const register = useCallback(async (data: any) => {
     try {
-      const response = await authApi.register(data)
+      const response = await AuthApi.register(data)
       const { user: userData, token: tokenData } = response.data
       
       setUser(userData)
@@ -43,7 +43,7 @@ export function useAuth() {
 
   const logout = useCallback(async () => {
     try {
-      await authApi.logout()
+      await AuthApi.logout()
     } catch (error) {
       console.error('Logout error:', error)
     } finally {
@@ -54,7 +54,7 @@ export function useAuth() {
 
   const checkAuth = useCallback(async () => {
     try {
-      const userData = await authApi.getMe()
+      const userData = await AuthApi.getMe()
       setUser(userData.data)
       return true
     } catch (error) {

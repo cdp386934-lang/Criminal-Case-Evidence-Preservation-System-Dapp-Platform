@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { authApi } from '../api/auth.api';
+import { AuthApi } from '../api/auth.api';
 import toast from 'react-hot-toast';
 
 export function useAuth() {
@@ -10,7 +10,7 @@ export function useAuth() {
 
   const login = useCallback(async (email: string, password: string) => {
     try {
-      const response = await authApi.login({ email, password });
+      const response = await AuthApi.login({ email, password });
       const { user: userData, token: tokenData } = response.data.data;
       
       setUser(userData);
@@ -27,7 +27,7 @@ export function useAuth() {
 
   const register = useCallback(async (data: any, avatarFile?: File) => {
     try {
-      const response = await authApi.register(data, avatarFile);
+      const response = await AuthApi.register(data, avatarFile);
       const { user: userData, token: tokenData } = response.data.data;
       
       setUser(userData);
@@ -44,7 +44,7 @@ export function useAuth() {
 
   const logout = useCallback(async () => {
     try {
-      await authApi.logout();
+      await AuthApi.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -55,7 +55,7 @@ export function useAuth() {
 
   const checkAuth = useCallback(async () => {
     try {
-      const response = await authApi.getMe();
+      const response = await AuthApi.getMe();
       setUser(response.data.data);
       return true;
     } catch (error) {
