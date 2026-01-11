@@ -26,35 +26,45 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   const navItems: Record<string, Array<{ href: string; label: string }>> = {
+    // police (公安机关): 通知(接收发送删除)、案件(增删改查)、证据(增删改查审批)、诉讼(上传撤销)、个人中心
     police: [
-      { href: '/cases', label: '案件管理' },
-      { href: '/cases/create', label: '创建案件' },
-      { href: '/notifications', label: '通知中心' },
+      { href: '/notification/notification-list', label: '通知中心' },
+      { href: '/case/case-list', label: '案件管理' },
+      { href: '/case/add-case', label: '创建案件' },
+      { href: '/evidence/evidence-list', label: '证据管理' },
+      { href: '/objection/objectionList', label: '诉讼管理' },
       { href: '/profile', label: '个人中心' },
     ],
+    // prosecutor (检察官): 通知(接收发送删除)、案件(查)、证据(增删改查)、质证(增删改查)、个人中心
     prosecutor: [
-      { href: '/cases', label: '案件管理' },
-      { href: '/cases/create', label: '创建案件' },
-      { href: '/notifications', label: '通知中心' },
+      { href: '/notification/notification-list', label: '通知中心' },
+      { href: '/case/case-list', label: '案件查看' },
+      { href: '/evidence/evidence-list', label: '证据管理' },
+      { href: '/objection/objectionList', label: '质证管理' },
       { href: '/profile', label: '个人中心' },
     ],
+    // judge (法官): 通知(接收发送删除)、案件(删改查)、证据(删查审批)、质证(删查审批)、个人中心
     judge: [
-      { href: '/cases', label: '案件审核' },
-      { href: '/objections', label: '质证处理' },
-      { href: '/notifications', label: '通知中心' },
+      { href: '/notification/notification-list', label: '通知中心' },
+      { href: '/case/case-list', label: '案件审核' },
+      { href: '/evidence/evidence-list', label: '证据审核' },
+      { href: '/objection/objectionList', label: '质证处理' },
       { href: '/profile', label: '个人中心' },
     ],
+    // lawyer (律师): 通知(接收发送删除)、案件(查)、证据(增删改查)、质证(增删改查)、个人中心
     lawyer: [
-      { href: '/cases', label: '我的案件' },
-      { href: '/objections', label: '质证意见' },
-      { href: '/notifications', label: '通知中心' },
+      { href: '/notification/notification-list', label: '通知中心' },
+      { href: '/case/case-list', label: '我的案件' },
+      { href: '/evidence/evidence-list', label: '证据管理' },
+      { href: '/objection/objectionList', label: '质证意见' },
       { href: '/profile', label: '个人中心' },
     ],
+    // admin (管理员): 推送通知、用户管理、权限管理、日志管理、个人中心
     admin: [
-      { href: '/users', label: '用户管理' },
-      { href: '/users/roles', label: '角色管理' },
-      { href: '/operation-logs', label: '操作日志' },
-      { href: '/notifications/create', label: '推送通知' },
+      { href: '/notification/add-notification', label: '推送通知' },
+      { href: '/users/user-list', label: '用户管理' },
+      { href: '/users/role-management', label: '权限管理' },
+      { href: '/operation-logs/operation-logs-list', label: '日志管理' },
       { href: '/profile', label: '个人中心' },
     ],
   }
@@ -87,7 +97,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center space-x-4">
               <NotificationBell />
               <span className="text-sm text-neutral-700">
-                {user?.name} ({roleLabels[user?.role || 'prosecutor']})
+                {user?.name} ({roleLabels[user?.role || '']})
               </span>
               <button
                 onClick={handleLogout}

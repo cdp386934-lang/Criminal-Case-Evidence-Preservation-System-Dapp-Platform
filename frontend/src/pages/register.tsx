@@ -228,11 +228,11 @@ export default function RegisterPage() {
       }
 
       // 显示成功消息，如果链上交易成功则显示交易哈希
-      if (responseData?.txHash) {
-        toast.success(`注册成功！链上交易哈希: ${responseData.txHash.substring(0, 10)}...`, { duration: 5000 })
-      } else {
-        toast.success('注册成功！')
-      }
+      const successMessage = responseData?.txHash
+        ? `注册成功！链上交易哈希: ${responseData.txHash.substring(0, 10)}...，正在跳转到登录页...`
+        : '注册成功！正在跳转到登录页...'
+      
+      toast.success(successMessage, { duration: 2000 })
 
       // 注册成功后自动断开钱包连接，允许用户切换钱包重新注册
       try {
@@ -263,10 +263,11 @@ export default function RegisterPage() {
       setAvatarFile(null)
       setAvatarPreview(null)
 
-      // 注册成功后跳转到登录页
+      // 注册成功后跳转到登录页（使用 replace 避免在历史记录中留下注册页面）
+      // 延迟800ms以确保用户能看到成功提示
       setTimeout(() => {
-        router.push('/login')
-      }, 1500)
+        router.replace('/login')
+      }, 800)
     } catch (error: any) {
       console.error('❌ [注册] 注册失败详情:', {
         message: error.message,

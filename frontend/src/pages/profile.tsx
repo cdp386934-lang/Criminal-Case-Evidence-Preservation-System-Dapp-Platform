@@ -2,18 +2,33 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import apiClient from '../api/api-client'
 import { AuthApi } from '../api/auth.api'
-import { useAuthStore } from '@/store/authStore'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card'
-import { User, Mail, Phone, MapPin, Wallet, Briefcase, Shield, Gavel, Scale } from 'lucide-react'
-import MainLayout from '@/src/components/layouts/main-layout'
-import { Input } from '@/src/components/ui/input'
-import { Button } from '@/src/components/ui/button'
+import { User, Mail, Phone, MapPin, Wallet, Briefcase, Shield, Gavel, Scale, Users } from 'lucide-react'
 import { User as UserType } from '@/models/user.model'
+import { useAuthStore } from '../../store/authStore'
+import ApiClient from '@/api/api-client'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, MainLayout } from '@/components'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
-const API_BASE =
-  (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api').replace(/\/api$/, '')
+// 获取 API 基础 URL（用于访问静态资源如图片）
+const getApiBaseUrl = () => {
+  const baseURL = ApiClient.defaults.baseURL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+  // 移除末尾的 /api，用于访问静态资源
+  return baseURL.replace(/\/api\/?$/, '')
+}
+
+// 构建头像 URL
+const getAvatarUrl = (avatarPath: string | null | undefined): string | null => {
+  if (!avatarPath) return null
+  // 如果已经是完整 URL，直接返回
+  if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+    return avatarPath
+  }
+  // 如果是相对路径，拼接 baseURL
+  const baseUrl = getApiBaseUrl()
+  return `${baseUrl}${avatarPath.startsWith('/') ? avatarPath : '/' + avatarPath}`
+}
 
 export default function ProfilePage() {
   const { user: authUser, setUser: setAuthUser } = useAuthStore()
@@ -58,7 +73,7 @@ export default function ProfilePage() {
     if (!user) return
     try {
       setSaving(true)
-      const res = await api.put(`/users/${user._id || user.id}`, {
+      const res = await ApiClient.put(`/users/${user._id || user.id}`, {
         name: form.name,
         phone: form.phone,
         address: form.address,
@@ -80,6 +95,8 @@ export default function ProfilePage() {
     if (user.role === 'judge') return <Gavel className="h-5 w-5 text-blue-600" />
     if (user.role === 'prosecutor') return <Shield className="h-5 w-5 text-red-600" />
     if (user.role === 'lawyer') return <Scale className="h-5 w-5 text-green-600" />
+    if (user.role === 'police') return <Shield className="h-5 w-5 text-blue-600" />
+    if (user.role === 'admin') return <Users className="h-5 w-5 text-gray-400" />
     return <Briefcase className="h-5 w-5 text-gray-400" />
   }, [user?.role])
 
@@ -117,16 +134,27 @@ export default function ProfilePage() {
 
       <Card>
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="w-16 h-16 rounded-full overflow-hidden border bg-gray-100 flex items-center justify-center">
-            {user.avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
+          <div className="w-16 h-16 rounded overflow-hidden border border-gray-300 bg-background-secondary flex items-center justify-center">
+            {getAvatarUrl(user.avatar) ? (
               <img
-                src={`${API_BASE}${user.avatar}`}
+                src={getAvatarUrl(user.avatar)!}
                 alt={user.name}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  // 如果图片加载失败，隐藏图片显示默认字符
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                  const parent = target.parentElement
+                  if (parent && !parent.querySelector('span')) {
+                    const fallback = document.createElement('span')
+                    fallback.className = 'text-xl font-semibold text-neutral-600'
+                    fallback.textContent = user.name?.charAt(0).toUpperCase() || 'U'
+                    parent.appendChild(fallback)
+                  }
+                }}
               />
             ) : (
-              <span className="text-xl font-semibold text-gray-500">
+              <span className="text-xl font-semibold text-neutral-600">
                 {user.name?.charAt(0).toUpperCase() || 'U'}
               </span>
             )}
@@ -205,7 +233,6 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      {/* 编辑信息 */}
       <Card>
         <CardHeader>
           <CardTitle>编辑联系方式</CardTitle>
@@ -249,7 +276,6 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      {/* 角色特定信息 */}
       {(user.judgeId || user.prosecutorId || user.lawyerId) && (
         <Card>
           <CardHeader>

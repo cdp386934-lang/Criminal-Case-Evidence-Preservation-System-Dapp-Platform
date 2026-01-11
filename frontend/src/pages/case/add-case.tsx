@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import FormInput from '../../components/form-input';
 import toast from 'react-hot-toast';
-import { CaseApi } from '@/src/api/case.api';
+import { CaseApi } from '../../api/case.api';
 
 interface CaseForm {
   caseNumber: string;

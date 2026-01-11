@@ -2,16 +2,35 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStore } from '../../store/authStore'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Briefcase, Plus, FileText, Users, Gavel, Scale, Shield, Bell, Lock, User } from 'lucide-react'
+import { Briefcase, Plus, FileText, Users, Gavel, Scale, Shield, Bell, Lock, User, FolderOpen, ClipboardList } from 'lucide-react'
 import MainLayout from '@/components/layouts/main-layout'
 import { Case } from '@/models/case.model'
-import apiClient from '@/api/api-client'
+import ApiClient from '@/api/api-client'
 import { CaseApi } from '@/api/case.api'
 import RoleGuard from '@/components/role-guard'
+
+// 获取 API 基础 URL（用于访问静态资源如图片）
+const getApiBaseUrl = () => {
+  const baseURL = ApiClient.defaults.baseURL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+  // 移除末尾的 /api，用于访问静态资源
+  return baseURL.replace(/\/api\/?$/, '')
+}
+
+// 构建头像 URL
+const getAvatarUrl = (avatarPath: string | null | undefined): string | null => {
+  if (!avatarPath) return null
+  // 如果已经是完整 URL，直接返回
+  if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+    return avatarPath
+  }
+  // 如果是相对路径，拼接 baseURL
+  const baseUrl = getApiBaseUrl()
+  return `${baseUrl}${avatarPath.startsWith('/') ? avatarPath : '/' + avatarPath}`
+}
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -71,18 +90,26 @@ export default function DashboardPage() {
           <div className="flex items-center gap-4">
             {/* 头像 */}
             <div className="w-14 h-14 rounded overflow-hidden border border-gray-300 bg-background-secondary flex items-center justify-center">
-              {user.avatar ? (
+              {getAvatarUrl(user?.avatar) ? (
                 <img
-                  src={`${apiClient}${user.avatar}`}
-                  alt={user.name}
+                  src={getAvatarUrl(user?.avatar)!}
+                  alt={user?.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    ; (e.target as HTMLImageElement).style.display = 'none'
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                    const parent = target.parentElement
+                    if (parent && !parent.querySelector('span')) {
+                      const fallback = document.createElement('span')
+                      fallback.className = 'text-lg font-semibold text-neutral-600'
+                      fallback.textContent = user?.name?.charAt(0).toUpperCase() || 'U'
+                      parent.appendChild(fallback)
+                    }
                   }}
                 />
               ) : (
                 <span className="text-lg font-semibold text-neutral-600">
-                  {user.name?.charAt(0).toUpperCase() || 'U'}
+                  {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </span>
               )}
             </div>
@@ -114,20 +141,7 @@ export default function DashboardPage() {
         {/* 角色特定的快捷操作 */}
         {user?.role === 'admin' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Link href="/cases">
-              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
-                <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
-                    <Briefcase className="h-6 w-6 text-primary-900" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-primary-900">案件管理</h3>
-                    <p className="text-sm text-neutral-600 mt-1">查看和管理所有案件</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link href="/notifications/create">
+            <Link href="/notification/add-notification">
               <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
@@ -140,8 +154,47 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             </Link>
+            <Link href="/users/user-list">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
+                <CardContent className="p-6 flex items-center gap-4 h-full">
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <Users className="h-6 w-6 text-primary-900" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-primary-900">用户管理</h3>
+                    <p className="text-sm text-neutral-600 mt-1">管理系统用户</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/users/role-management">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
+                <CardContent className="p-6 flex items-center gap-4 h-full">
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <Shield className="h-6 w-6 text-primary-900" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-primary-900">权限管理</h3>
+                    <p className="text-sm text-neutral-600 mt-1">管理角色权限</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/operation-logs/operation-logs-list">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
+                <CardContent className="p-6 flex items-center gap-4 h-full">
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <ClipboardList className="h-6 w-6 text-primary-900" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-primary-900">日志管理</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看操作日志</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
             <Link href="/profile">
-              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-background-secondary rounded flex-shrink-0 border border-gray-300">
                     <User className="h-6 w-6 text-primary-900" />
@@ -157,20 +210,20 @@ export default function DashboardPage() {
         )}
         {user?.role === 'police' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Link href="/police/notifications">
+            <Link href="/notification/notification-list">
               <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
                     <Bell className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary-900">推送通知</h3>
-                    <p className="text-sm text-neutral-600 mt-1">查看最新的系统通知</p>
+                    <h3 className="font-semibold text-primary-900">通知中心</h3>
+                    <p className="text-sm text-neutral-600 mt-1">接收、发送、删除通知</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
-            <Link href="/cases">
+            <Link href="/case/case-list">
               <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
@@ -183,11 +236,11 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             </Link>
-            <Link href="/cases/create">
+            <Link href="/case/add-case">
               <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
-                    <FileText className="h-6 w-6 text-primary-900" />
+                    <Plus className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-primary-900">创建案件</h3>
@@ -196,11 +249,37 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             </Link>
+            <Link href="/evidence/evidence-list">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
+                <CardContent className="p-6 flex items-center gap-4 h-full">
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <FolderOpen className="h-6 w-6 text-primary-900" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-primary-900">证据管理</h3>
+                    <p className="text-sm text-neutral-600 mt-1">增删改查、审批证据</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/objection/objectionList">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
+                <CardContent className="p-6 flex items-center gap-4 h-full">
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <FileText className="h-6 w-6 text-primary-900" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-primary-900">诉讼管理</h3>
+                    <p className="text-sm text-neutral-600 mt-1">上传、撤销诉讼</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
             <Link href="/profile">
               <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
-                    <Users className="h-6 w-6 text-primary-900" />
+                    <User className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-primary-900">个人中心</h3>
@@ -213,41 +292,54 @@ export default function DashboardPage() {
         )}
         {user?.role === 'judge' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Link href="/judge/notifications">
+            <Link href="/notification/notification-list">
               <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
                     <Bell className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary-900">推送通知</h3>
-                    <p className="text-sm text-neutral-600 mt-1">查看最新的系统通知</p>
+                    <h3 className="font-semibold text-primary-900">通知中心</h3>
+                    <p className="text-sm text-neutral-600 mt-1">接收、发送、删除通知</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
-            <Link href="/cases">
+            <Link href="/case/case-list">
               <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
                     <Briefcase className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary-900">案件管理</h3>
-                    <p className="text-sm text-neutral-600 mt-1">查看和管理所有案件</p>
+                    <h3 className="font-semibold text-primary-900">案件审核</h3>
+                    <p className="text-sm text-neutral-600 mt-1">删改查案件，模糊搜索</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
-            <Link href="/objections">
+            <Link href="/evidence/evidence-list">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
+                <CardContent className="p-6 flex items-center gap-4 h-full">
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <FolderOpen className="h-6 w-6 text-primary-900" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-primary-900">证据审核</h3>
+                    <p className="text-sm text-neutral-600 mt-1">删查、审批证据</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/objection/objectionList">
               <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
                     <FileText className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary-900">质证意见</h3>
-                    <p className="text-sm text-neutral-600 mt-1">处理质证意见</p>
+                    <h3 className="font-semibold text-primary-900">质证处理</h3>
+                    <p className="text-sm text-neutral-600 mt-1">删查、审批质证</p>
                   </div>
                 </CardContent>
               </Card>
@@ -269,41 +361,54 @@ export default function DashboardPage() {
         )}
         {user?.role === 'lawyer' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Link href="/lawyer/notifications">
+            <Link href="/notification/notification-list">
               <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
                     <Bell className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary-900">推送通知</h3>
-                    <p className="text-sm text-neutral-600 mt-1">查看最新的系统通知</p>
+                    <h3 className="font-semibold text-primary-900">通知中心</h3>
+                    <p className="text-sm text-neutral-600 mt-1">接收、发送、删除通知</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
-            <Link href="/cases">
+            <Link href="/case/case-list">
               <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
                     <Briefcase className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary-900">案件管理</h3>
-                    <p className="text-sm text-neutral-600 mt-1">查看和管理所有案件</p>
+                    <h3 className="font-semibold text-primary-900">我的案件</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看案件，模糊搜索</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
-            <Link href="/objections">
+            <Link href="/evidence/evidence-list">
               <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-orange-100 rounded-lg flex-shrink-0">
-                    <FileText className="h-6 w-6 text-orange-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <FolderOpen className="h-6 w-6 text-primary-900" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-primary-900">证据管理</h3>
+                    <p className="text-sm text-neutral-600 mt-1">增删改查证据</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/objection/objectionList">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
+                <CardContent className="p-6 flex items-center gap-4 h-full">
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <FileText className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-primary-900">质证意见</h3>
-                    <p className="text-sm text-neutral-600 mt-1">提交和管理质证意见</p>
+                    <p className="text-sm text-neutral-600 mt-1">增删改查质证</p>
                   </div>
                 </CardContent>
               </Card>
@@ -325,41 +430,54 @@ export default function DashboardPage() {
         )}
         {user?.role === 'prosecutor' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Link href="/prosecutor/notifications">
+            <Link href="/notification/notification-list">
               <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
                     <Bell className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary-900">推送通知</h3>
-                    <p className="text-sm text-neutral-600 mt-1">查看最新的系统通知</p>
+                    <h3 className="font-semibold text-primary-900">通知中心</h3>
+                    <p className="text-sm text-neutral-600 mt-1">接收、发送、删除通知</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
-            <Link href="/cases">
+            <Link href="/case/case-list">
               <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
                     <Briefcase className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary-900">案件管理</h3>
-                    <p className="text-sm text-neutral-600 mt-1">查看和管理所有案件</p>
+                    <h3 className="font-semibold text-primary-900">案件查看</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看案件，模糊搜索</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
-            <Link href="/objections">
+            <Link href="/evidence/evidence-list">
               <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-rose-100 rounded-lg flex-shrink-0">
-                    <FileText className="h-6 w-6 text-rose-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <FolderOpen className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary-900">质证意见</h3>
-                    <p className="text-sm text-neutral-600 mt-1">查看质证意见</p>
+                    <h3 className="font-semibold text-primary-900">证据管理</h3>
+                    <p className="text-sm text-neutral-600 mt-1">增删改查证据</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/objection/objectionList">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
+                <CardContent className="p-6 flex items-center gap-4 h-full">
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <FileText className="h-6 w-6 text-primary-900" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-primary-900">质证管理</h3>
+                    <p className="text-sm text-neutral-600 mt-1">增删改查质证</p>
                   </div>
                 </CardContent>
               </Card>

@@ -37,39 +37,39 @@ ps:
  * Todo
  * 我需要需要根据不同的角色显示不同的内容并设置对应路由进行跳转
  * - admin
- *   推送通知： /admin/notifications
- *   用户管理： /admin/users
- *   权限管理： /admin/permissions
- *   日志管理： /admin/logs
- *   个人中心： /admin/profile
+ *   推送通知： 
+ *   用户管理： 
+ *   权限管理： 
+ *   日志管理：
+ *   个人中心：更新
  * 
  * - police
- *   推送通知： /police/notifications
- *   案件管理： /police/cases
- *   上传证据： /police/evidence
- *   上传诉讼： /police/appeal
- *   个人中心： /police/profile
+ *   通知： （接收，发送，删除）
+ *   案件：（增删改查，模糊搜索）
+ *   证据： （增删改查，审批，模糊搜索）
+ *   诉讼： （上传，撤销，模糊搜索）
+ *   个人中心： （更新）
  * 
- * - judge
- *   推送通知： /judge/notifications
- *   案件管理： /judge/cases
- *   上传证据： /judge/evidence
- *   上传质证： /judge/Objection
- *   个人中心： /judge/profile
+ * - judge（法官）
+ *   通知：接收，发送，删除
+ *   案件： 删改查，模糊搜索
+ *   证据： 删查，审批，模糊搜索
+ *   质证： 删查，审批，模糊搜索
+ *   个人中心： 更新
  * 
- * - lawyer
- *   推送通知： /lawyer/notifications
- *   案件管理：/ lawyer/cases
- *   上传证据： /lawyer/evidence
- *   上传质证： /lawyer/Objection
- *   个人中心： /lawyer/profile
+ * - lawyer（律师）
+ *   通知：接收，发送，删除
+ *   案件： 查，模糊搜索
+ *   证据： 增删改查，模糊搜索
+ *   质证： 增删改查，模糊搜索
+ *   个人中心： 更新
  * 
- * - prosecutor
- *   推送通知： /prosecutor/notifications
- *   案件管理：/ prosecutor/cases
- *   上传证据： /prosecutor/evidence
- *   上传质证： /prosecutor/Objection
- *   个人中心： /prosecutor/profile
+ * - prosecutor（检察官）
+ *   通知：接收，发送，删除
+ *   案件： 查，模糊搜索
+ *   证据： 增删改查，模糊搜索
+ *   质证： 增删改查，模糊搜索
+ *   个人中心： 更新
  */
 
 案件的三个状态：
