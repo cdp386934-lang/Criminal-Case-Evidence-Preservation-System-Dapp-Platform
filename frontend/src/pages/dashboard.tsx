@@ -3,15 +3,15 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card'
-import { Button } from '@/src/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Briefcase, Plus, FileText, Users, Gavel, Scale, Shield, Bell, Lock, User } from 'lucide-react'
-import MainLayout from '@/src/components/layouts/main-layout'
-import { Case } from '../models/case.model'
-import apiClient from '../api/api-client'
-import { CaseApi } from '../api/case.api'
-import RoleGuard from '../components/role-guard'
+import MainLayout from '@/components/layouts/main-layout'
+import { Case } from '@/models/case.model'
+import apiClient from '@/api/api-client'
+import { CaseApi } from '@/api/case.api'
+import RoleGuard from '@/components/role-guard'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -41,10 +41,10 @@ export default function DashboardPage() {
 
   if (!isAuthenticated || !user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-background-secondary">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">正在验证身份...</p>
+          <div className="animate-spin rounded h-12 w-12 border-2 border-primary-900 border-t-transparent mx-auto"></div>
+          <p className="mt-4 text-neutral-600">正在验证身份...</p>
         </div>
       </div>
     )
@@ -55,8 +55,8 @@ export default function DashboardPage() {
       <MainLayout>
         <div className="flex items-center justify-center min-h-[calc(100vh-100px)]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">加载中...</p>
+            <div className="animate-spin rounded h-12 w-12 border-2 border-primary-900 border-t-transparent mx-auto"></div>
+            <p className="mt-4 text-neutral-600">加载中...</p>
           </div>
         </div>
       </MainLayout>
@@ -70,7 +70,7 @@ export default function DashboardPage() {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             {/* 头像 */}
-            <div className="w-14 h-14 rounded-full overflow-hidden border bg-gray-100 flex items-center justify-center">
+            <div className="w-14 h-14 rounded overflow-hidden border border-gray-300 bg-background-secondary flex items-center justify-center">
               {user.avatar ? (
                 <img
                   src={`${apiClient}${user.avatar}`}
@@ -81,29 +81,29 @@ export default function DashboardPage() {
                   }}
                 />
               ) : (
-                <span className="text-lg font-semibold text-gray-500">
+                <span className="text-lg font-semibold text-neutral-600">
                   {user.name?.charAt(0).toUpperCase() || 'U'}
                 </span>
               )}
             </div>
             <div className="flex items-center gap-3">
               {/* 角色图标 */}
-              {user?.role === 'judge' && <Gavel className="h-8 w-8 text-blue-600" />}
-              {user?.role === 'prosecutor' && <Shield className="h-8 w-8 text-red-600" />}
-              {user?.role === 'lawyer' && <Scale className="h-8 w-8 text-green-600" />}
-              {user?.role === 'police' && <Shield className="h-8 w-8 text-blue-500" />}
-              {user?.role === 'admin' && <Users className="h-8 w-8 text-gray-700" />}
+              {user?.role === 'judge' && <Gavel className="h-8 w-8 text-primary-900" />}
+              {user?.role === 'prosecutor' && <Shield className="h-8 w-8 text-primary-900" />}
+              {user?.role === 'lawyer' && <Scale className="h-8 w-8 text-primary-900" />}
+              {user?.role === 'police' && <Shield className="h-8 w-8 text-primary-900" />}
+              {user?.role === 'admin' && <Users className="h-8 w-8 text-primary-900" />}
 
               {/* 标题与欢迎语 */}
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-2xl font-semibold text-primary-900">
                   {user?.role === 'judge' && '法官工作台'}
                   {user?.role === 'prosecutor' && '检察官工作台'}
                   {user?.role === 'lawyer' && '律师工作台'}
                   {user?.role === 'police' && '公安办案工作台'}
                   {user?.role === 'admin' && '管理员工作台'}
                 </h1>
-                <p className="mt-2 text-gray-600">
+                <p className="mt-2 text-neutral-600">
                   欢迎回来，{user?.name}
                 </p>
               </div>
@@ -115,40 +115,40 @@ export default function DashboardPage() {
         {user?.role === 'admin' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link href="/cases">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-green-100 rounded-lg flex-shrink-0">
-                    <Briefcase className="h-6 w-6 text-green-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <Briefcase className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">案件管理</h3>
-                    <p className="text-sm text-gray-500 mt-1">查看和管理所有案件</p>
+                    <h3 className="font-semibold text-primary-900">案件管理</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看和管理所有案件</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/notifications/create">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-blue-100 rounded-lg flex-shrink-0">
-                    <Bell className="h-6 w-6 text-blue-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <Bell className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">推送通知</h3>
-                    <p className="text-sm text-gray-500 mt-1">创建系统通知</p>
+                    <h3 className="font-semibold text-primary-900">推送通知</h3>
+                    <p className="text-sm text-neutral-600 mt-1">创建系统通知</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/profile">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-indigo-100 rounded-lg flex-shrink-0">
-                    <User className="h-6 w-6 text-indigo-600" />
+                  <div className="p-3 bg-background-secondary rounded flex-shrink-0 border border-gray-300">
+                    <User className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">个人中心</h3>
-                    <p className="text-sm text-gray-500 mt-1">查看和编辑个人资料</p>
+                    <h3 className="font-semibold text-primary-900">个人中心</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看和编辑个人资料</p>
                   </div>
                 </CardContent>
               </Card>
@@ -158,53 +158,53 @@ export default function DashboardPage() {
         {user?.role === 'police' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link href="/police/notifications">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-blue-100 rounded-lg flex-shrink-0">
-                    <Bell className="h-6 w-6 text-blue-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <Bell className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">推送通知</h3>
-                    <p className="text-sm text-gray-500 mt-1">查看最新的系统通知</p>
+                    <h3 className="font-semibold text-primary-900">推送通知</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看最新的系统通知</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/cases">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-green-100 rounded-lg flex-shrink-0">
-                    <Briefcase className="h-6 w-6 text-green-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <Briefcase className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">案件管理</h3>
-                    <p className="text-sm text-gray-500 mt-1">查看和管理所有案件</p>
+                    <h3 className="font-semibold text-primary-900">案件管理</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看和管理所有案件</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/cases/create">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-yellow-100 rounded-lg flex-shrink-0">
-                    <FileText className="h-6 w-6 text-yellow-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <FileText className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">创建案件</h3>
-                    <p className="text-sm text-gray-500 mt-1">创建新的案件</p>
+                    <h3 className="font-semibold text-primary-900">创建案件</h3>
+                    <p className="text-sm text-neutral-600 mt-1">创建新的案件</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/profile">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-purple-100 rounded-lg flex-shrink-0">
-                    <Users className="h-6 w-6 text-purple-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <Users className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">个人中心</h3>
-                    <p className="text-sm text-gray-500 mt-1">查看和编辑个人资料</p>
+                    <h3 className="font-semibold text-primary-900">个人中心</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看和编辑个人资料</p>
                   </div>
                 </CardContent>
               </Card>
@@ -214,53 +214,53 @@ export default function DashboardPage() {
         {user?.role === 'judge' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link href="/judge/notifications">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-blue-100 rounded-lg flex-shrink-0">
-                    <Bell className="h-6 w-6 text-blue-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <Bell className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">推送通知</h3>
-                    <p className="text-sm text-gray-500 mt-1">查看最新的系统通知</p>
+                    <h3 className="font-semibold text-primary-900">推送通知</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看最新的系统通知</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/cases">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-green-100 rounded-lg flex-shrink-0">
-                    <Briefcase className="h-6 w-6 text-green-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <Briefcase className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">案件管理</h3>
-                    <p className="text-sm text-gray-500 mt-1">查看和管理所有案件</p>
+                    <h3 className="font-semibold text-primary-900">案件管理</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看和管理所有案件</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/objections">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-red-100 rounded-lg flex-shrink-0">
-                    <FileText className="h-6 w-6 text-red-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <FileText className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">质证意见</h3>
-                    <p className="text-sm text-gray-500 mt-1">处理质证意见</p>
+                    <h3 className="font-semibold text-primary-900">质证意见</h3>
+                    <p className="text-sm text-neutral-600 mt-1">处理质证意见</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/profile">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-purple-100 rounded-lg flex-shrink-0">
-                    <User className="h-6 w-6 text-purple-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <User className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">个人中心</h3>
-                    <p className="text-sm text-gray-500 mt-1">查看和编辑个人资料</p>
+                    <h3 className="font-semibold text-primary-900">个人中心</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看和编辑个人资料</p>
                   </div>
                 </CardContent>
               </Card>
@@ -270,53 +270,53 @@ export default function DashboardPage() {
         {user?.role === 'lawyer' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link href="/lawyer/notifications">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-blue-100 rounded-lg flex-shrink-0">
-                    <Bell className="h-6 w-6 text-blue-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <Bell className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">推送通知</h3>
-                    <p className="text-sm text-gray-500 mt-1">查看最新的系统通知</p>
+                    <h3 className="font-semibold text-primary-900">推送通知</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看最新的系统通知</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/cases">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-green-100 rounded-lg flex-shrink-0">
-                    <Briefcase className="h-6 w-6 text-green-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <Briefcase className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">案件管理</h3>
-                    <p className="text-sm text-gray-500 mt-1">查看和管理所有案件</p>
+                    <h3 className="font-semibold text-primary-900">案件管理</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看和管理所有案件</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/objections">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-orange-100 rounded-lg flex-shrink-0">
                     <FileText className="h-6 w-6 text-orange-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">质证意见</h3>
-                    <p className="text-sm text-gray-500 mt-1">提交和管理质证意见</p>
+                    <h3 className="font-semibold text-primary-900">质证意见</h3>
+                    <p className="text-sm text-neutral-600 mt-1">提交和管理质证意见</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/profile">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-purple-100 rounded-lg flex-shrink-0">
-                    <User className="h-6 w-6 text-purple-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <User className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">个人中心</h3>
-                    <p className="text-sm text-gray-500 mt-1">查看和编辑个人资料</p>
+                    <h3 className="font-semibold text-primary-900">个人中心</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看和编辑个人资料</p>
                   </div>
                 </CardContent>
               </Card>
@@ -326,53 +326,53 @@ export default function DashboardPage() {
         {user?.role === 'prosecutor' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link href="/prosecutor/notifications">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-blue-100 rounded-lg flex-shrink-0">
-                    <Bell className="h-6 w-6 text-blue-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <Bell className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">推送通知</h3>
-                    <p className="text-sm text-gray-500 mt-1">查看最新的系统通知</p>
+                    <h3 className="font-semibold text-primary-900">推送通知</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看最新的系统通知</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/cases">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-green-100 rounded-lg flex-shrink-0">
-                    <Briefcase className="h-6 w-6 text-green-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <Briefcase className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">案件管理</h3>
-                    <p className="text-sm text-gray-500 mt-1">查看和管理所有案件</p>
+                    <h3 className="font-semibold text-primary-900">案件管理</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看和管理所有案件</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/objections">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-rose-100 rounded-lg flex-shrink-0">
                     <FileText className="h-6 w-6 text-rose-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">质证意见</h3>
-                    <p className="text-sm text-gray-500 mt-1">查看质证意见</p>
+                    <h3 className="font-semibold text-primary-900">质证意见</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看质证意见</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/profile">
-              <Card className="h-full hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100">
+              <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
-                  <div className="p-3 bg-purple-100 rounded-lg flex-shrink-0">
-                    <User className="h-6 w-6 text-purple-600" />
+                  <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">
+                    <User className="h-6 w-6 text-primary-900" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">个人中心</h3>
-                    <p className="text-sm text-gray-500 mt-1">查看和编辑个人资料</p>
+                    <h3 className="font-semibold text-primary-900">个人中心</h3>
+                    <p className="text-sm text-neutral-600 mt-1">查看和编辑个人资料</p>
                   </div>
                 </CardContent>
               </Card>
@@ -430,7 +430,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {cases.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-neutral-600">
                 暂无案件
                 <RoleGuard allow={['judge', 'police', 'prosecutor']}>
                   <Link href="/cases/create">
@@ -453,14 +453,14 @@ export default function DashboardPage() {
                       <div>
                         <h3 className="font-semibold text-gray-900">{caseItem.caseTitle}</h3>
                         <p className="text-sm text-gray-600 mt-1">案件编号: {caseItem.caseNumber}</p>
-                        <p className="text-sm text-gray-500 mt-1">类型: {caseItem.caseType}</p>
+                        <p className="text-sm text-neutral-600 mt-1">类型: {caseItem.caseType}</p>
                       </div>
                       <span
                         className={`px-2 py-1 text-xs rounded-full ${caseItem.status === 'CLOSED'
                           ? 'bg-green-100 text-green-800'
                           : caseItem.status === 'INVESTIGATION'
                             ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-800'
+                            : 'bg-gray-100 text-primary-900'
                           }`}
                       >
                         {caseItem.status === 'CLOSED'

@@ -2,11 +2,11 @@
   "name": "evidence-backend",
   "version": "1.0.0",
   "description": "刑事案件存证系统后端服务",
-  "main": "dist/server.js",
+  "main": "dist/app.ts",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node dist/app.ts",
     "test": "jest"
   },
   "dependencies": {

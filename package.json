@@ -9,13 +9,13 @@
     "contracts"
   ],
   "scripts": {
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev:backend": "cd backend && npm run dev",
-    "build:frontend": "cd frontend && npm run build",
-    "build:backend": "cd backend && npm run build",
-    "build:contracts": "cd contracts && npx hardhat compile",
-    "deploy:contracts": "cd contracts && npx hardhat run scripts/deploy.ts",
-    "test:contracts": "cd contracts && npx hardhat test"
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build",
+    "build:contracts": "npm --prefix contracts run compile",
+    "deploy:contracts": "npm --prefix contracts run deploy",
+    "test:contracts": "npm --prefix contracts run test"
   },
   "keywords": [
     "blockchain",

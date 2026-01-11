@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card'
-import { Button } from '@/src/components/ui/button'
-import { Input } from '@/src/components/ui/input'
-import { Label } from '@/src/components/ui/label'
-import { AuthApi } from '../api/auth.api'
-import { useAuthStore } from '@/store/authStore'
+import Link from 'next/link'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { AuthApi } from '@/api/auth.api'
+import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
 import { Scale } from 'lucide-react'
 
@@ -166,21 +167,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md shadow-xl">
-        <CardHeader className="text-center space-y-1 pb-6">
-          <div className="mx-auto mb-4 w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center shadow-lg">
-            <Scale className="w-10 h-10 text-white" />
+    <div className="min-h-screen flex items-center justify-center bg-background-secondary py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-left">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-primary-900 rounded flex items-center justify-center">
+              <Scale className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-xl font-semibold text-primary-900">用户登录</CardTitle>
+              <CardDescription className="text-sm text-neutral-600 mt-0.5">
+                刑事案件链上存证系统
+              </CardDescription>
+            </div>
           </div>
-          <CardTitle className="text-3xl font-bold text-gray-900">用户登录</CardTitle>
-          <CardDescription className="text-base">
-            刑事案件链上存证系统
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="email">邮箱地址</Label>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-1.5">
+              <Label htmlFor="email">邮箱地址 *</Label>
               <Input
                 id="email"
                 type="email"
@@ -189,12 +194,11 @@ export default function LoginPage() {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="请输入邮箱地址"
                 autoComplete="email"
-                className="h-11"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">密码</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="password">密码 *</Label>
               <Input
                 id="password"
                 type="password"
@@ -203,27 +207,26 @@ export default function LoginPage() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="请输入密码"
                 autoComplete="current-password"
-                className="h-11"
               />
             </div>
 
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-11"
+              className="w-full"
               size="lg"
             >
               {loading ? '登录中...' : '登录'}
             </Button>
 
-            <div className="text-center text-sm text-gray-600">
+            <div className="text-center text-sm text-neutral-600 pt-2 border-t border-gray-200">
               还没有账号？{' '}
-              <a
+              <Link
                 href="/register"
-                className="text-primary-600 hover:text-primary-700 font-medium"
+                className="text-primary-900 hover:text-primary-800 font-medium"
               >
                 立即注册
-              </a>
+              </Link>
             </div>
           </form>
         </CardContent>

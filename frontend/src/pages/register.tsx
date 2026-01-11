@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card'
-import { Button } from '@/src/components/ui/button'
-import { Input } from '@/src/components/ui/input'
-import { Label } from '@/src/components/ui/label'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/src/components/ui/tabs'
-import { AuthApi } from '../api/auth.api'
-import { useWallet } from '../hooks/use-wallet'
+import Link from 'next/link'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { AuthApi } from '@/api/auth.api'
+import { useWallet } from '@/hooks/use-wallet'
 import toast from 'react-hot-toast'
 import { Scale, Gavel, Briefcase, Wallet, AlertCircle, LogOut, Shield, Settings } from 'lucide-react'
 
@@ -220,8 +221,8 @@ export default function RegisterPage() {
       console.log('✅ [注册] 注册成功:', response.data)
 
       // 检查响应格式并提取数据
-      let responseData = response.data
-      if (responseData && typeof responseData === 'object' && 'success' in responseData && 'data' in responseData && ) {
+      let responseData: any = response.data
+      if (responseData && typeof responseData === 'object' && 'success' in responseData && 'data' in responseData) {
         // 标准格式：{ success: true, data: { user, token }, error: null }
         responseData = responseData.data
       }
@@ -336,20 +337,24 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-2xl shadow-xl">
-        <CardHeader className="text-center space-y-1 pb-6">
-          <div className="mx-auto mb-4 w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center shadow-lg">
-            <Scale className="w-10 h-10 text-white" />
+    <div className="min-h-screen flex items-center justify-center bg-background-secondary py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-3xl">
+        <CardHeader className="text-left">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-primary-900 rounded flex items-center justify-center">
+              <Scale className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-xl font-semibold text-primary-900">用户注册</CardTitle>
+              <CardDescription className="text-sm text-neutral-600 mt-0.5">
+                刑事案件链上存证系统 - 请选择您的角色
+              </CardDescription>
+            </div>
           </div>
-          <CardTitle className="text-3xl font-bold text-gray-900">用户注册</CardTitle>
-          <CardDescription className="text-base">
-            刑事案件链上存证系统 - 请选择您的角色
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="w-full mb-6 grid grid-cols-5 gap-2">
+            <TabsList className="w-full mb-6 grid grid-cols-5 gap-1">
               <TabsTrigger value="judge" className="flex items-center gap-2 w-full justify-center">
                 <Gavel className="w-4 h-4" />
                 法官
@@ -374,15 +379,15 @@ export default function RegisterPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* 钱包连接区域 */}
-              <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+              <div className="p-4 bg-background-secondary rounded border border-gray-300">
                 <div className="flex items-center justify-between mb-2">
-                  <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Label className="text-sm font-semibold text-neutral-900 flex items-center gap-2">
                     <Wallet className="w-4 h-4" />
                     Web3 钱包连接
                   </Label>
                   {walletConnected && (
-                    <span className="text-xs text-green-600 font-medium flex items-center gap-1">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-xs text-success font-medium flex items-center gap-1">
+                      <div className="w-2 h-2 bg-success rounded"></div>
                       已连接
                     </span>
                   )}
@@ -410,7 +415,7 @@ export default function RegisterPage() {
                         size="sm"
                         onClick={handleDisconnectWallet}
                         disabled={walletConnecting}
-                        className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="w-full text-error hover:text-error-dark hover:bg-gray-50"
                       >
                         <LogOut className="w-4 h-4 mr-1" />
                         断开连接
@@ -441,7 +446,7 @@ export default function RegisterPage() {
                       )}
                     </Button>
                     {walletError && (
-                      <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-2 rounded">
+                      <div className="flex items-center gap-2 text-sm text-error bg-gray-50 border border-gray-300 p-2 rounded">
                         <AlertCircle className="w-4 h-4" />
                         <span>{walletError}</span>
                       </div>
@@ -459,7 +464,7 @@ export default function RegisterPage() {
               <div className="space-y-2">
                 <Label htmlFor="avatar">头像（可选）</Label>
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border">
+                  <div className="w-16 h-16 rounded bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-300">
                     {avatarPreview ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -539,9 +544,9 @@ export default function RegisterPage() {
               </div>
               {/* 角色特定字段 */}
               <TabsContent value="judge" className="mt-0">
-                <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <h3 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="space-y-4 p-4 bg-background-secondary rounded border border-gray-300">
+                  <h3 className="text-sm font-semibold text-primary-900 mb-3 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     法官信息
@@ -562,9 +567,9 @@ export default function RegisterPage() {
               </TabsContent>
 
               <TabsContent value="prosecutor" className="mt-0">
-                <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <h3 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="space-y-4 p-4 bg-background-secondary rounded border border-gray-300">
+                  <h3 className="text-sm font-semibold text-primary-900 mb-3 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                     检察官信息
@@ -599,9 +604,9 @@ export default function RegisterPage() {
               </TabsContent>
 
               <TabsContent value="lawyer" className="mt-0">
-                <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <h3 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="space-y-4 p-4 bg-background-secondary rounded border border-gray-300">
+                  <h3 className="text-sm font-semibold text-primary-900 mb-3 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                     律师信息
@@ -636,9 +641,9 @@ export default function RegisterPage() {
               </TabsContent>
 
               <TabsContent value="police" className="mt-0">
-                <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <h3 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="space-y-4 p-4 bg-background-secondary rounded border border-gray-300">
+                  <h3 className="text-sm font-semibold text-primary-900 mb-3 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                     警察信息
@@ -673,9 +678,9 @@ export default function RegisterPage() {
               </TabsContent>
 
               <TabsContent value="admin" className="mt-0">
-                <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <h3 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="space-y-4 p-4 bg-background-secondary rounded border border-gray-300">
+                  <h3 className="text-sm font-semibold text-primary-900 mb-3 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
@@ -744,12 +749,12 @@ export default function RegisterPage() {
 
               <div className="text-center text-sm text-gray-600 pt-2">
                 已有账号？{' '}
-                <a
+                <Link
                   href="/login"
-                  className="text-primary-600 hover:text-primary-700 font-medium"
+                  className="text-primary-600 hover:text-primary-700 font-medium transition-colors"
                 >
                   立即登录
-                </a>
+                </Link>
               </div>
             </form>
           </Tabs>

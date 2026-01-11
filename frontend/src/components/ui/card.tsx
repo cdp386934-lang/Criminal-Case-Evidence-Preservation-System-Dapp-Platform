@@ -1,6 +1,12 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
+/**
+ * 司法系统风格卡片组件
+ * - 使用边框区分，而非重阴影
+ * - 矩形或轻微圆角
+ * - 简洁专业
+ */
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -8,7 +14,9 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-lg border border-gray-200 bg-white text-gray-950 shadow-sm",
+      "rounded", // 轻微圆角
+      "border border-gray-200 bg-white",
+      "text-neutral-900",
       className
     )}
     {...props}
@@ -22,7 +30,12 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    className={cn(
+      "flex flex-col space-y-1.5",
+      "px-6 py-4",
+      "border-b border-gray-200",
+      className
+    )}
     {...props}
   />
 ))
@@ -35,7 +48,8 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-2xl font-semibold leading-none tracking-tight",
+      "text-lg font-semibold text-primary-900",
+      "leading-tight",
       className
     )}
     {...props}
@@ -49,7 +63,11 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-gray-500", className)}
+    className={cn(
+      "text-sm text-neutral-600",
+      "leading-normal",
+      className
+    )}
     {...props}
   />
 ))
@@ -59,7 +77,14 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  <div 
+    ref={ref} 
+    className={cn(
+      "px-6 py-4",
+      className
+    )} 
+    {...props} 
+  />
 ))
 CardContent.displayName = "CardContent"
 
@@ -69,7 +94,12 @@ const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center p-6 pt-0", className)}
+    className={cn(
+      "flex items-center",
+      "px-6 py-4",
+      "border-t border-gray-200",
+      className
+    )}
     {...props}
   />
 ))

@@ -48,14 +48,15 @@ export default function WalletConnect() {
   return (
     <div className="flex items-center space-x-2">
       {walletAddress ? (
-        <div className="px-3 py-1 bg-green-100 text-green-800 rounded text-sm font-mono">
+        <div className="px-3 py-1.5 bg-background-secondary border border-gray-300 text-neutral-900 rounded text-sm font-mono">
+          <span className="text-success text-xs mr-2">●</span>
           {formatAddress(walletAddress)}
         </div>
       ) : (
         <button
           onClick={connectWallet}
           disabled={connecting}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
+          className="px-4 py-1.5 bg-primary-900 text-white rounded hover:bg-primary-800 disabled:opacity-50 text-sm font-medium transition-colors"
         >
           {connecting ? '连接中...' : '连接钱包'}
         </button>

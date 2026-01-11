@@ -5,24 +5,31 @@ interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
 }
 
+/**
+ * 司法系统风格表单输入组件
+ */
 const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
   ({ label, error, className = '', ...props }, ref) => {
     return (
-      <div className="w-full">
+      <div className="w-full space-y-1.5">
         {label && (
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-neutral-900">
             {label}
-            {props.required && <span className="text-red-500 ml-1">*</span>}
+            {props.required && <span className="text-error ml-1">*</span>}
           </label>
         )}
         <input
           ref={ref}
-          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-            error ? 'border-red-500' : 'border-gray-300'
+          className={`w-full h-10 px-3 py-2 border rounded bg-white text-sm text-neutral-900 transition-colors focus:outline-none focus:border-primary-700 focus:ring-2 focus:ring-primary-700 focus:ring-offset-0 ${
+            error ? 'border-error' : 'border-gray-300'
           } ${className}`}
           {...props}
         />
-        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+        {error && (
+          <p className="text-sm text-error mt-0.5">
+            {error}
+          </p>
+        )}
       </div>
     );
   }
