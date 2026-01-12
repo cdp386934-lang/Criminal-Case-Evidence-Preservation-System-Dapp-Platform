@@ -1,5 +1,7 @@
+'use client'
+
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { ethers } from 'ethers';
@@ -18,8 +20,9 @@ interface MaterialForm {
 }
 
 export default function AddDefenseMaterial() {
-  const { caseId } = useParams<{ caseId: string }>();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const caseId = searchParams.get('caseId');
+  const router = useRouter();
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const {
@@ -73,7 +76,7 @@ export default function AddDefenseMaterial() {
 
       await DefenseMaterialApi.create(payload);
       toast.success('辩护材料添加成功');
-      navigate(`/cases/${caseId}/materials`);
+      router.push(`/defense-material/defense-material-list?caseId=${caseId}`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || error.message || '添加失败');
     } finally {
@@ -143,7 +146,7 @@ export default function AddDefenseMaterial() {
             </button>
             <button
               type="button"
-              onClick={() => navigate(`/cases/${caseId}/materials`)}
+              onClick={() =>  router.push(`/cases/${caseId}/materials`)}
               className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
             >
               取消

@@ -1,10 +1,12 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { Case } from '@/src/models/case.model';
-import { CaseApi } from '@/src/api/case.api';
-import FormInput from '@/src/components/form-input';
+import { Case } from '@/models/case.model';
+import { CaseApi } from '@/api/case.api';
+import FormInput from '@/components/form-input';
 
 interface CaseForm {
   caseTitle: string;
@@ -15,8 +17,9 @@ interface CaseForm {
 }
 
 export default function UpdateCase() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [caseData, setCaseData] = useState<Case | null>(null);
   const {
@@ -47,7 +50,7 @@ export default function UpdateCase() {
       });
     } catch (error: any) {
       toast.error(error.response?.data?.message || '加载失败');
-      navigate('/cases');
+      router.push('/case/case-list');
     }
   };
 
@@ -62,7 +65,7 @@ export default function UpdateCase() {
       };
       await CaseApi.update(id, payload);
       toast.success('案件更新成功');
-      navigate(`/cases/${id}`);
+      router.push(`/case/case-detail?id=${id}`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || '更新失败');
     } finally {
@@ -122,7 +125,7 @@ export default function UpdateCase() {
           </button>
           <button
             type="button"
-            onClick={() => navigate(`/cases/${id}`)}
+            onClick={() => router.push(`/case/case-detail?id=${id}`)}
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
           >
             取消

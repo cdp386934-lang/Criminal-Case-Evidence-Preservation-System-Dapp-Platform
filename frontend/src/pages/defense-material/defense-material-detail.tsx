@@ -1,12 +1,16 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { DefenseMaterial } from '@/src/models/defense-material.model';
 import { DefenseMaterialApi } from '@/src/api/defense-material.api';
 
 export default function DefenseMaterialDetail() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
+  const router = useRouter();
   const [material, setMaterial] = useState<DefenseMaterial | null>(null);
   const [loading, setLoading] = useState(true);
   const [blockchainData, setBlockchainData] = useState<any>(null);
@@ -28,7 +32,7 @@ export default function DefenseMaterialDetail() {
       // 注意：这里需要根据实际的后端数据结构来调整
     } catch (error: any) {
       toast.error(error.response?.data?.message || '加载失败');
-      navigate('/cases');
+      router.push('/case/case-list');
     } finally {
       setLoading(false);
     }

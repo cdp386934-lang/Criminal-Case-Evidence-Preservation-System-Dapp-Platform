@@ -1,5 +1,8 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { ObjectionApi } from '@/src/api/objection.api';
 import toast from 'react-hot-toast';
 import RoleGuard from '@/src/components/role-guard';
@@ -8,8 +11,9 @@ import { Objection } from '@/src/models/objection.model';
 
 
 export default function ObjectionDetail() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
+  const router = useRouter();
   const { user } = useAuthStore();
   const [objection, setObjection] = useState<Objection | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,7 +32,7 @@ export default function ObjectionDetail() {
       setObjection(response.data.data);
     } catch (error: any) {
       toast.error(error.response?.data?.message || '加载失败');
-      navigate('/cases');
+      router.push('/case/case-list');
     } finally {
       setLoading(false);
     }

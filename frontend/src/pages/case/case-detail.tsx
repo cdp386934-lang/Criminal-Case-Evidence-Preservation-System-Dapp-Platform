@@ -1,15 +1,19 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';;
+import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { Case } from '@/src/models/case.model';
-import { CaseApi } from '@/src/api/case.api';
-import RoleGuard from '@/src/components/role-guard';
-import CaseWorkflow from '@/src/components/case-work-flow';
-import TimelineViewer from '@/src/components/timeline-viewer';
+import { Case } from '@/models/case.model';
+import { CaseApi } from '@/api/case.api';
+import RoleGuard from '@/components/role-guard';
+import CaseWorkflow from '@/components/case-work-flow';
+import TimelineViewer from '@/components/timeline-viewer';
 
 export default function CaseDetail() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
+  const router = useRouter();
   const [caseData, setCaseData] = useState<Case | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +31,7 @@ export default function CaseDetail() {
       setCaseData(response.data.data);
     } catch (error: any) {
       toast.error(error.response?.data?.message || '加载失败');
-      navigate('/cases');
+      router.push('/case/case-list');
     } finally {
       setLoading(false);
     }
@@ -62,20 +66,20 @@ export default function CaseDetail() {
         <div className="space-x-2">
           <RoleGuard allow={['judge']}>
             <Link
-              to={`/cases/${id}/edit`}
+              href={`/case/update-case?id=${id}`}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               编辑
             </Link>
           </RoleGuard>
           <Link
-            to={`/cases/${id}/workflow`}
+            href={`/case/case-workflow?id=${id}`}
             className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
           >
             流程管理
           </Link>
           <Link
-            to="/cases"
+            href="/case/case-list"
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
           >
             返回列表
@@ -133,14 +137,14 @@ export default function CaseDetail() {
           <h2 className="text-xl font-semibold">相关资源</h2>
           <div className="space-x-2">
             <Link
-              to={`/cases/${id}/evidence`}
+              href={`/evidence/evidence-list?caseId=${id}`}
               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
             >
               查看证据
             </Link>
             <RoleGuard allow={['lawyer']}>
               <Link
-                to={`/cases/${id}/materials`}
+                href={`/defense-material/defense-material-list?caseId=${id}`}
                 className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
               >
                 查看辩护材料

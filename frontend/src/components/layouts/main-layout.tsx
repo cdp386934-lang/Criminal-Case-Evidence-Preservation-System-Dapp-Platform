@@ -59,6 +59,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
           { href: '/case/case-list', label: '案件', icon: Briefcase },
           { href: '/evidence/evidence-list', label: '证据', icon: FolderOpen },
           { href: '/objection/objectionList', label: '诉讼', icon: FileText },
+          { href: '/correction/correction-list', label: '补正', icon: Edit },
+          { href: '/defense-material/defense-material-list', label: '辩护材料', icon: FileText },
           { href: '/profile', label: '个人中心', icon: User }
         ]
       case 'judge':
@@ -68,6 +70,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
           { href: '/case/case-list', label: '案件', icon: Briefcase },
           { href: '/evidence/evidence-list', label: '证据', icon: FolderOpen },
           { href: '/objection/objectionList', label: '质证', icon: ClipboardList },
+          { href: '/correction/correction-list', label: '补正', icon: Edit },
+          { href: '/defense-material/defense-material-list', label: '辩护材料', icon: FileText },
           { href: '/profile', label: '个人中心', icon: User }
         ]
       case 'lawyer':
@@ -77,6 +81,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           { href: '/case/case-list', label: '案件', icon: Briefcase },
           { href: '/evidence/evidence-list', label: '证据', icon: FolderOpen },
           { href: '/objection/objectionList', label: '质证', icon: ClipboardList },
+          { href: '/defense-material/defense-material-list', label: '辩护材料', icon: FileText },
           { href: '/profile', label: '个人中心', icon: User }
         ]
       case 'prosecutor':
@@ -86,6 +91,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
           { href: '/case/case-list', label: '案件', icon: Briefcase },
           { href: '/evidence/evidence-list', label: '证据', icon: FolderOpen },
           { href: '/objection/objectionList', label: '质证', icon: ClipboardList },
+          { href: '/correction/correction-list', label: '补正', icon: Edit },
+          { href: '/defense-material/defense-material-list', label: '辩护材料', icon: FileText },
           { href: '/profile', label: '个人中心', icon: User }
         ]
       case 'admin':

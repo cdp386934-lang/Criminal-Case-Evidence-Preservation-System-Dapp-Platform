@@ -1,13 +1,16 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { DefenseMaterial } from '@/src/models/defense-material.model';
 import { DefenseMaterialApi } from '@/src/api/defense-material.api';
 import RoleGuard from '@/src/components/role-guard';
 
 export default function DefenseMaterialList() {
-  const { caseId } = useParams<{ caseId: string }>();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const caseId = searchParams.get('caseId');
   const [materials, setMaterials] = useState<DefenseMaterial[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,12 +42,14 @@ export default function DefenseMaterialList() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">辩护材料列表</h1>
         <RoleGuard allow={['lawyer']}>
-          <Link
-            to={`/cases/${caseId}/materials/create`}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            添加材料
-          </Link>
+          {caseId && (
+            <Link
+              href={`/defense-material/add-defense-material?caseId=${caseId}`}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              添加材料
+            </Link>
+          )}
         </RoleGuard>
       </div>
 
@@ -52,12 +57,14 @@ export default function DefenseMaterialList() {
         <div className="text-center py-12 bg-white rounded-lg shadow">
           <p className="text-gray-500">暂无辩护材料</p>
           <RoleGuard allow={['lawyer']}>
-            <Link
-              to={`/cases/${caseId}/materials/create`}
-              className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              添加第一个材料
-            </Link>
+            {caseId && (
+              <Link
+                href={`/defense-material/add-defense-material?caseId=${caseId}`}
+                className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                添加第一个材料
+              </Link>
+            )}
           </RoleGuard>
         </div>
       ) : (
@@ -99,7 +106,7 @@ export default function DefenseMaterialList() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <Link
-                      to={`/materials/${material._id}`}
+                      href={`/defense-material/defense-material-detail?id=${material._id}`}
                       className="text-blue-600 hover:text-blue-900"
                     >
                       查看

@@ -1,5 +1,7 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import FormInput from '../../components/form-input';
 import toast from 'react-hot-toast';
@@ -12,8 +14,9 @@ interface CorrectionForm {
 }
 
 export default function UpdateCorrection() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [correction, setCorrection] = useState<Correction | null>(null);
   const {
@@ -41,7 +44,7 @@ export default function UpdateCorrection() {
       });
     } catch (error: any) {
       toast.error(error.response?.data?.message || '加载失败');
-      navigate('/cases');
+      router.push('/case/case-list');
     }
   };
 
@@ -51,7 +54,7 @@ export default function UpdateCorrection() {
       setLoading(true);
       await CorrectionApi.update(id, data);
       toast.success('补正更新成功');
-      navigate(`/corrections/${id}`);
+      router.push(`/correction/correction-detail?id=${id}`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || '更新失败');
     } finally {
@@ -98,7 +101,7 @@ export default function UpdateCorrection() {
           </button>
           <button
             type="button"
-            onClick={() => navigate(`/corrections/${id}`)}
+            onClick={() =>  router.push(`/corrections/${id}`)}
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
           >
             取消

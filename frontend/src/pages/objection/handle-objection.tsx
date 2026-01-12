@@ -1,5 +1,7 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { ObjectionApi } from '@/src/api/objection.api';
 import {Objection} from '@/src/models/objection.model'
@@ -13,8 +15,9 @@ interface HandleForm {
 }
 
 export default function HandleObjection() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [objection, setObjection] = useState<Objection | null>(null);
   const {
@@ -43,11 +46,11 @@ export default function HandleObjection() {
       setObjection(response.data.data);
       if (response.data.data.status !== 'pending') {
         toast.error('该质证意见已被处理');
-        navigate(`/objections/${id}`);
+        router.push(`/objection/objection-detail?id=${id}`);
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || '加载失败');
-      navigate('/cases');
+      router.push('/case/case-list');
     }
   };
 
@@ -60,7 +63,7 @@ export default function HandleObjection() {
         handleResult: data.handleResult,
       });
       toast.success('处理成功');
-      navigate(`/objections/${id}`);
+       router.push(`/objections/${id}`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || '处理失败');
     } finally {
@@ -147,7 +150,7 @@ export default function HandleObjection() {
             </button>
             <button
               type="button"
-              onClick={() => navigate(`/objections/${id}`)}
+              onClick={() =>  router.push(`/objections/${id}`)}
               className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
             >
               取消

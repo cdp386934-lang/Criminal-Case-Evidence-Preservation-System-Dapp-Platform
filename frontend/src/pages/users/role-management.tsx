@@ -1,12 +1,14 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { UserApi } from '../../api/user-api';
 import { RoleAssignment, UserRole, ListRolesParams } from '../../models/user.model';
 import { useAuthStore } from '../../../store/authStore';
 import toast from 'react-hot-toast';
 
 export default function RoleManagement() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { user } = useAuthStore();
   const [roles, setRoles] = useState<RoleAssignment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,11 +23,11 @@ export default function RoleManagement() {
     // 检查是否为管理员
     if (user?.role !== 'admin') {
       toast.error('无权限访问');
-      navigate('/dashboard');
+      router.push('/dashboard');
       return;
     }
     loadRoles();
-  }, [page, pageSize, filters, user, navigate]);
+  }, [page, pageSize, filters, user,  router.push]);
 
   const loadRoles = async () => {
     try {

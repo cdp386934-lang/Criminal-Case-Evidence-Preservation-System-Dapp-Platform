@@ -1,10 +1,11 @@
+'use client'
+
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { CorrectionApi } from '../../api/correction.api';
 import { EvidenceApi } from '../../api/evidence.api';
 import { Evidence } from '../../models/evidence.model';
-import FormInput from '../../components/form-input';
 import { addCorrection } from '../../lib/blockchain';
 import toast from 'react-hot-toast';
 import { ethers } from 'ethers';
@@ -15,8 +16,9 @@ interface CorrectionForm {
 }
 
 export default function AddCorrection() {
-  const { evidenceId } = useParams<{ evidenceId: string }>();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const evidenceId = searchParams.get('evidenceId');
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [evidence, setEvidence] = useState<Evidence | null>(null);
   const {
@@ -84,7 +86,7 @@ export default function AddCorrection() {
 
       await CorrectionApi.create(payload);
       toast.success('补正添加成功');
-      navigate(`/evidence/${evidenceId}/corrections`);
+      router.push(`/correction/correction-list?evidenceId=${evidenceId}`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || error.message || '添加失败');
     } finally {
@@ -136,7 +138,8 @@ export default function AddCorrection() {
           </button>
           <button
             type="button"
-            onClick={() => navigate(`/evidence/${evidenceId}/corrections`)}
+            //onClick={() =>  router.push(`/evidence/${evidenceId}/corrections`)}
+            onClick={() => router.push(`/evidence/${evidenceId}/corrections`)}
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
           >
             取消

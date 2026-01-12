@@ -1,5 +1,7 @@
+'use client'
+
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { ethers } from 'ethers';
@@ -15,8 +17,9 @@ interface EvidenceForm {
 }
 
 export default function AddEvidence() {
-  const { caseId } = useParams<{ caseId: string }>();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const caseId = searchParams.get('caseId');
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const {
     register,
@@ -68,7 +71,7 @@ export default function AddEvidence() {
 
       await EvidenceApi.create(payload);
       toast.success('证据添加成功');
-      navigate(`/cases/${caseId}/evidence`);
+      router.push(`/evidence/evidence-list?caseId=${caseId}`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || '添加失败');
     } finally {
@@ -138,7 +141,7 @@ export default function AddEvidence() {
           </button>
           <button
             type="button"
-            onClick={() => navigate(`/cases/${caseId}/evidence`)}
+            onClick={() =>  router.push(`/cases/${caseId}/evidence`)}
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
           >
             取消

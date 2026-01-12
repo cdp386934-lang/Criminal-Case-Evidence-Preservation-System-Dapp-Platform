@@ -1,10 +1,17 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { CorrectionApi } from '@/src/api/correction.api';
 import { Correction } from '@/src/models/corrention.model';
+import { useAuthStore } from '@/store/authStore';
+import toast from 'react-hot-toast';
 
 export default function CorrectionList() {
-  const { evidenceId } = useParams<{ evidenceId: string }>();
+  const searchParams = useSearchParams();
+  const evidenceId = searchParams.get('evidenceId');
+  const { user } = useAuthStore();
   const [corrections, setCorrections] = useState<Correction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,7 +27,8 @@ export default function CorrectionList() {
       setLoading(true);
       const response = await CorrectionApi.listByEvidence(evidenceId);
       setCorrections(response.data.data || []);
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || '加载补正列表失败');
       console.error('Failed to load corrections:', error);
     } finally {
       setLoading(false);
@@ -44,9 +52,9 @@ export default function CorrectionList() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">补正列表</h1>
-        {evidenceId && (
+        {evidenceId && (user?.role === 'police' || user?.role === 'prosecutor') && (
           <Link
-            to={`/evidence/${evidenceId}/corrections/create`}
+            href={`/correction/add-correction?evidenceId=${evidenceId}`}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             添加补正
@@ -78,7 +86,7 @@ export default function CorrectionList() {
                   </div>
                 </div>
                 <Link
-                  to={`/corrections/${correction._id}`}
+                  href={`/correction/correction-detail?id=${correction._id}`}
                   className="text-blue-600 hover:text-blue-800"
                 >
                   查看详情 →

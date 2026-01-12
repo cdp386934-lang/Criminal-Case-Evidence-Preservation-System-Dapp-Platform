@@ -1,10 +1,17 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { EvidenceApi } from '@/src/api/evidence.api';
 import { Evidence } from '@/src/models/evidence.model';
+import { useAuthStore } from '@/store/authStore';
+import toast from 'react-hot-toast';
 
 export default function EvidenceList() {
-  const { caseId } = useParams<{ caseId: string }>();
+  const searchParams = useSearchParams();
+  const caseId = searchParams.get('caseId');
+  const { user } = useAuthStore();
   const [evidences, setEvidences] = useState<Evidence[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,7 +27,8 @@ export default function EvidenceList() {
       setLoading(true);
       const response = await EvidenceApi.listByCase(caseId);
       setEvidences(response.data.data || []);
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || '加载证据列表失败');
       console.error('Failed to load evidences:', error);
     } finally {
       setLoading(false);
@@ -35,9 +43,9 @@ export default function EvidenceList() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">证据列表</h1>
-        {caseId && (
+        {caseId && (user?.role === 'police' || user?.role === 'prosecutor') && (
           <Link
-            to={`/cases/${caseId}/evidence/create`}
+            href={`/evidence/add-evidence?caseId=${caseId}`}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             添加证据
@@ -58,7 +66,7 @@ export default function EvidenceList() {
               <div className="mt-4 flex justify-between items-center">
                 <span className="text-xs text-gray-500">{evidence.fileName}</span>
                 <Link
-                  to={`/evidence/${evidence._id}`}
+                  href={`/evidence/evidence-detail?id=${evidence._id}`}
                   className="text-blue-600 hover:text-blue-800 text-sm"
                 >
                   查看详情

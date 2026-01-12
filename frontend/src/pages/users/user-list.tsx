@@ -1,12 +1,14 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { UserApi } from '../../api/user-api';
 import { User } from '../../models/user.model';
 import { useAuthStore } from '../../../store/authStore';
 import toast from 'react-hot-toast';
 
 export default function UserList() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { user } = useAuthStore();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,11 +17,11 @@ export default function UserList() {
     // 检查是否为管理员
     if (user?.role !== 'admin') {
       toast.error('无权限访问');
-      navigate('/dashboard');
+      router.push('/dashboard');
       return;
     }
     loadUsers();
-  }, [user, navigate]);
+  }, [user,  router.push]);
 
   const loadUsers = async () => {
     try {
@@ -53,7 +55,7 @@ export default function UserList() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">用户管理</h1>
         <button
-          onClick={() => navigate('/users/roles')}
+          onClick={() => router.push('/users/role-management')}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           角色管理
@@ -119,7 +121,7 @@ export default function UserList() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
-                      onClick={() => navigate(`/users/${userItem._id || userItem.id}`)}
+                      onClick={() =>  router.push(`/users/${userItem._id || userItem.id}`)}
                       className="text-blue-600 hover:text-blue-900"
                     >
                       查看

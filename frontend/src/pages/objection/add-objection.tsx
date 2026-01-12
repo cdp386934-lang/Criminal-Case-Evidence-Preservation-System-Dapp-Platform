@@ -1,5 +1,7 @@
+'use client'
+
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { ObjectionApi } from '@/src/api/objection.api';
 import { EvidenceApi } from '@/src/api/evidence.api';
@@ -13,8 +15,9 @@ interface ObjectionForm {
 }
 
 export default function AddObjection() {
-  const { evidenceId } = useParams<{ evidenceId: string }>();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const evidenceId = searchParams.get('evidenceId');
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [evidence, setEvidence] = useState<Evidence | null>(null);
   const {
@@ -36,7 +39,7 @@ export default function AddObjection() {
       setEvidence(response.data.data);
     } catch (error: any) {
       toast.error(error.response?.data?.message || '加载证据失败');
-      navigate('/cases');
+      router.push('/case/case-list');
     }
   };
 
@@ -56,7 +59,7 @@ export default function AddObjection() {
 
       await ObjectionApi.create(payload);
       toast.success('质证意见提交成功');
-      navigate(`/evidence/${evidenceId}/objections`);
+      router.push(`/objection/objectionList?evidenceId=${evidenceId}`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || '提交失败');
     } finally {
@@ -104,7 +107,7 @@ export default function AddObjection() {
             </button>
             <button
               type="button"
-              onClick={() => navigate(`/evidence/${evidenceId}/objections`)}
+              onClick={() =>  router.push(`/evidence/${evidenceId}/objections`)}
               className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
             >
               取消

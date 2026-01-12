@@ -1,5 +1,7 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { EvidenceApi } from '@/src/api/evidence.api';
 import { Evidence } from '@/src/models/evidence.model';
@@ -13,8 +15,9 @@ interface EvidenceForm {
 }
 
 export default function UpdateEvidence() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [evidence, setEvidence] = useState<Evidence | null>(null);
   const {
@@ -43,7 +46,7 @@ export default function UpdateEvidence() {
       });
     } catch (error: any) {
       toast.error(error.response?.data?.message || '加载失败');
-      navigate('/cases');
+      router.push('/case/case-list');
     }
   };
 
@@ -53,7 +56,7 @@ export default function UpdateEvidence() {
       setLoading(true);
       await EvidenceApi.update(id, data);
       toast.success('证据更新成功');
-      navigate(`/evidence/${id}`);
+      router.push(`/evidence/evidence-detail?id=${id}`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || '更新失败');
     } finally {
@@ -112,7 +115,7 @@ export default function UpdateEvidence() {
           </button>
           <button
             type="button"
-            onClick={() => navigate(`/evidence/${id}`)}
+            onClick={() =>  router.push(`/evidence/${id}`)}
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
           >
             取消

@@ -1,5 +1,7 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { NotificationApi } from '../../api/notification.api';
 import { useAuthStore } from '../../../store/authStore';
 import toast from 'react-hot-toast';
@@ -224,7 +226,7 @@ export default function NotificationList() {
                         </span>
                       </div>
                       <Link
-                        to={`/notifications/${notification._id}`}
+                        href={`/notification/notification-detail?id=${notification._id}`}
                         className="block"
                       >
                         <h3 className="text-lg font-medium text-gray-900 hover:text-blue-600">
@@ -242,7 +244,7 @@ export default function NotificationList() {
                           <div className="mt-1">
                             关联案件:{' '}
                             <Link
-                              to={`/cases/${notification.relatedCaseId._id}`}
+                              href={`/case/case-detail?id=${notification.relatedCaseId._id}`}
                               className="text-blue-600 hover:underline"
                             >
                               {notification.relatedCaseId.caseNumber} -{' '}
@@ -254,7 +256,7 @@ export default function NotificationList() {
                           <div className="mt-1">
                             关联证据:{' '}
                             <Link
-                              to={`/evidence/${notification.relatedEvidenceId._id}`}
+                              href={`/evidence/evidence-detail?id=${notification.relatedEvidenceId._id}`}
                               className="text-blue-600 hover:underline"
                             >
                               {notification.relatedEvidenceId.title}

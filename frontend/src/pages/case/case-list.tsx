@@ -1,12 +1,16 @@
-import { CaseApi } from '@/src/api/case.api';
-import { Case } from '@/src/models/case.model';
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+'use client'
 
+import { CaseApi } from '@/api/case.api';
+import { Case } from '@/models/case.model';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useAuthStore } from '../../../store/authStore';
+import toast from 'react-hot-toast';
 
 export default function CaseList() {
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuthStore();
 
   useEffect(() => {
     loadCases();
@@ -17,7 +21,8 @@ export default function CaseList() {
       setLoading(true);
       const response = await CaseApi.list();
       setCases(response.data.data || []);
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || '加载案件列表失败');
       console.error('Failed to load cases:', error);
     } finally {
       setLoading(false);
@@ -42,12 +47,14 @@ export default function CaseList() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">案件列表</h1>
-        <Link
-          to="/cases/create"
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          创建案件
-        </Link>
+        {user?.role === 'police' && (
+          <Link
+            href="/case/add-case"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            创建案件
+          </Link>
+        )}
       </div>
 
       {cases.length === 0 ? (
@@ -95,7 +102,7 @@ export default function CaseList() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <Link
-                      to={`/cases/${caseItem._id}`}
+                      href={`/case/case-detail?id=${caseItem._id}`}
                       className="text-blue-600 hover:text-blue-900 mr-4"
                     >
                       查看

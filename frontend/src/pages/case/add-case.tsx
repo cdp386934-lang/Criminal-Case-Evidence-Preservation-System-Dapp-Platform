@@ -1,5 +1,7 @@
+'use client'
+
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import FormInput from '../../components/form-input';
 import toast from 'react-hot-toast';
@@ -16,7 +18,7 @@ interface CaseForm {
 }
 
 export default function AddCase() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const {
     register,
@@ -34,7 +36,7 @@ export default function AddCase() {
       };
       await CaseApi.create(payload);
       toast.success('案件创建成功');
-      navigate('/cases');
+      router.push('/case/case-list');
     } catch (error: any) {
       toast.error(error.response?.data?.message || '创建失败');
     } finally {
@@ -96,7 +98,7 @@ export default function AddCase() {
           </button>
           <button
             type="button"
-            onClick={() => navigate('/cases')}
+            onClick={() => router.push('/case/case-list')}
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
           >
             取消

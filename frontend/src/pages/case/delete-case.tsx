@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import DashboardLayout from '@/src/components/layouts/dashboard-layout'
+import DashboardLayout from '@/components/layouts/dashboard-layout'
 import toast from 'react-hot-toast'
-import { CaseApi } from '@/src/api/case.api'
+import { CaseApi } from '@/api/case.api'
 
 type CaseItem = {
   _id: string
@@ -32,13 +32,14 @@ export default function PoliceCaseDelete() {
     setLoading(true)
     try {
       const res = await CaseApi.list()
-      const data = res.data
-      const list: CaseItem[] = Array.isArray(data) ? data : data.items || []
-      const totalCount = Array.isArray(data) ? data.length : data.total ?? list.length
+      const responseData = res.data
+      // CaseApi.list() 返回 { success: boolean; data: Case[] }
+      const list: CaseItem[] = responseData.data || []
+      const totalCount = list.length
       setItems(list)
       setTotal(totalCount)
     } catch (error: any) {
-      toast.error(error?.response?.data?.error || '获取案件列表失败')
+      toast.error(error?.response?.data?.error || error?.response?.data?.message || '获取案件列表失败')
     } finally {
       setLoading(false)
     }

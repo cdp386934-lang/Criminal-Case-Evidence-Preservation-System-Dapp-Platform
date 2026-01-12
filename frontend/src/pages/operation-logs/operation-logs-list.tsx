@@ -1,12 +1,14 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { OperationLogsApi } from '../../api/operation-logs.api';
 import { OperationLogDTO, OperationType, OperationTargetType, ListOperationLogsParams } from '../../models/operation-logs.model';
 import { useAuthStore } from '../../../store/authStore';
 import toast from 'react-hot-toast';
 
 export default function OperationLogsList() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { user } = useAuthStore();
   const [logs, setLogs] = useState<OperationLogDTO[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,11 +21,11 @@ export default function OperationLogsList() {
     // 检查是否为管理员
     if (user?.role !== 'admin') {
       toast.error('无权限访问');
-      navigate('/dashboard');
+      router.push('/dashboard');
       return;
     }
     loadLogs();
-  }, [page, pageSize, filters, user, navigate]);
+  }, [page, pageSize, filters, user,  router.push]);
 
   const loadLogs = async () => {
     try {

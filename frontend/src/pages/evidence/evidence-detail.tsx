@@ -1,5 +1,8 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { Evidence } from '@/src/models/evidence.model';
 import { getEvidence, verifyEvidence } from '@/src/lib/blockchain';
@@ -13,8 +16,9 @@ interface BlockchainEvidence {
 }
 
 export default function EvidenceDetail() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
+  const router = useRouter();
   const [evidence, setEvidence] = useState<Evidence | null>(null);
   const [loading, setLoading] = useState(true);
   const [blockchainData, setBlockchainData] = useState<BlockchainEvidence | null>(null);
@@ -47,7 +51,7 @@ export default function EvidenceDetail() {
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || '加载失败');
-      navigate('/cases');
+      router.push('/case/case-list');
     } finally {
       setLoading(false);
     }
@@ -75,7 +79,7 @@ export default function EvidenceDetail() {
     try {
       await EvidenceApi.delete(id);
       toast.success('删除成功');
-      navigate(`/cases/${evidence?.caseId}/evidence`);
+      router.push(`/evidence/evidence-list?caseId=${evidence?.caseId}`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || '删除失败');
     }
@@ -96,7 +100,7 @@ export default function EvidenceDetail() {
         <div className="space-x-2">
           <RoleGuard allow={['prosecutor', 'lawyer']}>
             <Link
-              to={`/evidence/${id}/edit`}
+              href={`/evidence/update-evidence?id=${id}`}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               编辑
@@ -111,7 +115,7 @@ export default function EvidenceDetail() {
             </button>
           </RoleGuard>
           <Link
-            to={`/cases/${evidence.caseId}/evidence`}
+            href={`/evidence/evidence-list?caseId=${evidence.caseId}`}
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
           >
             返回列表
@@ -189,7 +193,7 @@ export default function EvidenceDetail() {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">补正记录</h2>
           <Link
-            to={`/evidence/${id}/corrections`}
+            href={`/correction/correction-list?evidenceId=${id}`}
             className="text-blue-600 hover:text-blue-800"
           >
             查看所有补正 →

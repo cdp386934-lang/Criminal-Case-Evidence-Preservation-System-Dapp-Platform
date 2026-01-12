@@ -1,13 +1,16 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { CaseApi } from '../../api/case.api';
 import { Case } from '../../models/case.model';
-import CaseWorkflow from '@/src/components/case-work-flow';
-import TimelineViewer from '@/src/components/timeline-viewer';
+import CaseWorkflow from '@/components/case-work-flow';
+import TimelineViewer from '@/components/timeline-viewer';
 
 export default function CaseWorkflowPage() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
+  const router = useRouter();
   const [caseData, setCaseData] = useState<Case | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,7 +28,7 @@ export default function CaseWorkflowPage() {
       setCaseData(response.data.data);
     } catch (error) {
       console.error('Failed to load case:', error);
-      navigate('/cases');
+      router.push('/case/case-list');
     } finally {
       setLoading(false);
     }
@@ -47,7 +50,7 @@ export default function CaseWorkflowPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
         <button
-          onClick={() => navigate(`/cases/${id}`)}
+          onClick={() => router.push(`/case/case-detail?id=${id}`)}
           className="text-blue-600 hover:text-blue-800 mb-4"
         >
           ← 返回案件详情

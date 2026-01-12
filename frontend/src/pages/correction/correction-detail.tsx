@@ -1,13 +1,17 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Correction } from '../../models/corrention.model';
 import RoleGuard from '../../components/role-guard';
 import toast from 'react-hot-toast';
 import { CorrectionApi } from '@/src/api/correction.api';
 
 export default function CorrectionDetail() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
+  const router = useRouter();
   const [correction, setCorrection] = useState<Correction | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,7 +29,7 @@ export default function CorrectionDetail() {
       setCorrection(response.data.data);
     } catch (error: any) {
       toast.error(error.response?.data?.message || '加载失败');
-      navigate('/cases');
+      router.push('/case/case-list');
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,8 @@
+'use client'
+
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { Objection } from '@/src/models/objection.model';
 import { useAuthStore } from '@/store/authStore';
@@ -7,7 +10,9 @@ import { ObjectionApi } from '@/src/api/objection.api';
 import RoleGuard from '@/src/components/role-guard';
 
 export default function ObjectionList() {
-  const { caseId, evidenceId } = useParams<{ caseId?: string; evidenceId?: string }>();
+  const searchParams = useSearchParams();
+  const caseId = searchParams.get('caseId') || undefined;
+  const evidenceId = searchParams.get('evidenceId') || undefined;
   const { user } = useAuthStore();
   const [objections, setObjections] = useState<Objection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +65,7 @@ export default function ObjectionList() {
         <RoleGuard allow={['lawyer']}>
           {evidenceId && (
             <Link
-              to={`/evidence/${evidenceId}/objections/create`}
+              href={`/objection/add-objection?evidenceId=${evidenceId}`}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               提交质证意见
@@ -75,7 +80,7 @@ export default function ObjectionList() {
           <RoleGuard allow={['lawyer']}>
             {evidenceId && (
               <Link
-                to={`/evidence/${evidenceId}/objections/create`}
+                href={`/objection/add-objection?evidenceId=${evidenceId}`}
                 className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 提交第一个质证意见
@@ -143,7 +148,7 @@ export default function ObjectionList() {
                     )}
                   </div>
                   <Link
-                    to={`/objections/${objection._id}`}
+                    href={`/objection/objection-detail?id=${objection._id}`}
                     className="text-blue-600 hover:text-blue-800 ml-4"
                   >
                     查看详情 →
