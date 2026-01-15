@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { Case } from '@/models/case.model';
-import { CaseApi } from '@/api/case.api';
-import FormInput from '@/components/form-input';
+import { Case } from '../../models/case.model';
+import { CaseApi } from '../../api/case.api';
+import FormInput from '../../components/form-input';
 
 interface CaseForm {
   caseTitle: string;

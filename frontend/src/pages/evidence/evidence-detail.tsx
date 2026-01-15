@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { Evidence } from '@/src/models/evidence.model';
-import { getEvidence, verifyEvidence } from '@/src/lib/blockchain';
-import { EvidenceApi } from '@/src/api/evidence.api';
-import RoleGuard from '@/src/components/role-guard';
+import { Evidence } from '../../models/evidence.model';
+import { getEvidence, verifyEvidence } from '../../lib/blockchain';
+import { EvidenceApi } from '../../api/evidence.api';
+import RoleGuard from '../../components/role-guard';
 
 interface BlockchainEvidence {
   hash: string;

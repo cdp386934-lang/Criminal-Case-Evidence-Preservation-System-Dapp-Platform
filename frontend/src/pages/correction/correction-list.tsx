@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CorrectionApi } from '@/src/api/correction.api';
-import { Correction } from '@/src/models/corrention.model';
-import { useAuthStore } from '@/store/authStore';
+import { CorrectionApi } from '../../api/correction.api';
+import { Correction } from '../../models/corrention.model';
+import { useAuthStore } from '../../../store/authStore';
 import toast from 'react-hot-toast';
 
 export default function CorrectionList() {

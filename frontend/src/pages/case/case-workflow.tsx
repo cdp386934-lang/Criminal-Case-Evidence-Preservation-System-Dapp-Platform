@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CaseApi } from '../../api/case.api';
 import { Case } from '../../models/case.model';
-import CaseWorkflow from '@/components/case-work-flow';
-import TimelineViewer from '@/components/timeline-viewer';
+import CaseWorkflow from '../../components/case-work-flow';
+import TimelineViewer from '../../components/timeline-viewer';
 
 export default function CaseWorkflowPage() {
   const searchParams = useSearchParams();

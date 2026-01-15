@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import DashboardLayout from '@/components/layouts/dashboard-layout'
+import DashboardLayout from '../../components/layouts/dashboard-layout'
 import toast from 'react-hot-toast'
-import { CaseApi } from '@/api/case.api'
+import { CaseApi } from '../../api/case.api'
 
 type CaseItem = {
   _id: string

@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { Objection } from '@/src/models/objection.model';
-import { useAuthStore } from '@/store/authStore';
-import { ObjectionApi } from '@/src/api/objection.api';
-import RoleGuard from '@/src/components/role-guard';
+import { Objection } from '../../models/objection.model';
+import { useAuthStore } from '../../../store/authStore';
+import { ObjectionApi } from '../../api/objection.api';
+import RoleGuard from '../../components/role-guard';
 
 export default function ObjectionList() {
   const searchParams = useSearchParams();

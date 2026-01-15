@@ -3,10 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import FormInput from '../../components/form-input';
 import toast from 'react-hot-toast';
-import { CorrectionApi } from '@/src/api/correction.api';
-import { Correction } from '@/src/models/corrention.model';
+import { CorrectionApi } from '../../api/correction.api';
+import { Correction } from '../../models/corrention.model';
 
 interface CorrectionForm {
   reason?: string;

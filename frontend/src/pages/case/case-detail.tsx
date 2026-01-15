@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { Case } from '@/models/case.model';
-import { CaseApi } from '@/api/case.api';
-import RoleGuard from '@/components/role-guard';
-import CaseWorkflow from '@/components/case-work-flow';
-import TimelineViewer from '@/components/timeline-viewer';
+import { Case } from '../../models/case.model';
+import { CaseApi } from '../../api/case.api';
+import RoleGuard from '../../components/role-guard';
+import CaseWorkflow from '../../components/case-work-flow';
+import TimelineViewer from '../../components/timeline-viewer';
 
 export default function CaseDetail() {
   const searchParams = useSearchParams();

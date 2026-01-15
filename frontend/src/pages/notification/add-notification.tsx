@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { NotificationApi } from '@/src/api/notification.api'
-import DashboardLayout from '@/src/components/layouts/dashboard-layout'
+import { NotificationApi } from '../../api/notification.api'
+import DashboardLayout from '../../components/layouts/dashboard-layout'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 

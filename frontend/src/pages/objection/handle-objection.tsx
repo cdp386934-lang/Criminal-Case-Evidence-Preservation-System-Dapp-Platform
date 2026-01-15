@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { ObjectionApi } from '@/src/api/objection.api';
-import {Objection} from '@/src/models/objection.model'
-import FormInput from '@/src/components/form-input';
+import { ObjectionApi } from '../../api/objection.api';
+import {Objection} from '../../models/objection.model'
+import FormInput from '../../components/form-input';
 import toast from 'react-hot-toast';
-import RoleGuard from '@/src/components/role-guard';
+import RoleGuard from '../../components/role-guard';
 
 interface HandleForm {
   isAccepted: boolean;

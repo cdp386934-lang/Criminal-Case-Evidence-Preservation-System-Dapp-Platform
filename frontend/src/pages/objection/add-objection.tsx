@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { ObjectionApi } from '@/src/api/objection.api';
-import { EvidenceApi } from '@/src/api/evidence.api';
-import { Evidence } from '@/src/models/evidence.model';
-import FormInput from '@/src/components/form-input';
+import { ObjectionApi } from '../../api/objection.api';
+import { EvidenceApi } from '../../api/evidence.api';
+import { Evidence } from '../../models/evidence.model';
+import FormInput from '../../components/form-input';
 import toast from 'react-hot-toast';
-import RoleGuard from '@/src/components/role-guard';
+import RoleGuard from '../../components/role-guard';
 
 interface ObjectionForm {
   content: string;

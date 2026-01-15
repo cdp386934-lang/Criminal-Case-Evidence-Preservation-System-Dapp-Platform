@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Correction } from '../../models/corrention.model';
 import RoleGuard from '../../components/role-guard';
 import toast from 'react-hot-toast';
-import { CorrectionApi } from '@/src/api/correction.api';
+import { CorrectionApi } from '../../api/correction.api';
 
 export default function CorrectionDetail() {
   const searchParams = useSearchParams();
@@ -59,14 +59,14 @@ export default function CorrectionDetail() {
         <div className="space-x-2">
           <RoleGuard allow={['prosecutor', 'judge']}>
             <Link
-              to={`/corrections/${id}/edit`}
+              href={`/corrections/${id}/edit`}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               编辑
             </Link>
           </RoleGuard>
           <Link
-            to={`/evidence/${correction.originalEvidenceId}/corrections`}
+            href={`/evidence/${correction.originalEvidenceId}/corrections`}
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
           >
             返回列表

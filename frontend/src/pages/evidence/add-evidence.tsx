@@ -5,9 +5,9 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { ethers } from 'ethers';
-import { addEvidence } from '@/src/lib/blockchain';
-import { EvidenceApi } from '@/src/api/evidence.api';
-import FormInput from '@/src/components/form-input';
+import { addEvidence } from '../../lib/blockchain';
+import { EvidenceApi } from '../../api/evidence.api';
+import FormInput from '../../components/form-input';
 
 interface EvidenceForm {
   title: string;

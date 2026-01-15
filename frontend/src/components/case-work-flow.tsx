@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CaseStatus } from '../models/case.model';
 import {UserRole} from '../models/user.model'
-import { caseApi } from '../api/case.api';
+import { CaseApi } from '../api/case.api';
 import { useAuthStore } from '../../store/authStore';
 import toast from 'react-hot-toast';
 
@@ -56,7 +56,7 @@ export default function CaseWorkflow({ caseId, currentStatus, onStatusChange }: 
 
     try {
       setLoading(true);
-      await caseApi.moveNextStage(caseId, {
+      await CaseApi.moveNextStage(caseId, {
         comment: `由${user.name}推进到下一阶段`,
         operatorAddress: user.walletAddress,
       });

@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { EvidenceApi } from '@/src/api/evidence.api';
-import { Evidence } from '@/src/models/evidence.model';
-import { useAuthStore } from '@/store/authStore';
+import { EvidenceApi } from '../../api/evidence.api';
+import { Evidence } from '../../models/evidence.model';
+import { useAuthStore } from '../../../store/authStore';
 import toast from 'react-hot-toast';
 
 export default function EvidenceList() {

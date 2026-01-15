@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ObjectionApi } from '@/src/api/objection.api';
+import { ObjectionApi } from '../../api/objection.api';
 import toast from 'react-hot-toast';
-import RoleGuard from '@/src/components/role-guard';
-import { useAuthStore } from '@/store/authStore';
-import { Objection } from '@/src/models/objection.model';
+import RoleGuard from '../../components/role-guard';
+import { useAuthStore } from '../../../store/authStore';
+import { Objection } from '../../models/objection.model';
 
 
 export default function ObjectionDetail() {
@@ -76,14 +76,14 @@ export default function ObjectionDetail() {
         <div className="space-x-2">
           {caseInfo && (
             <Link
-              to={`/cases/${typeof objection.caseId === 'string' ? objection.caseId : caseInfo._id}`}
+              href={`/cases/${typeof objection.caseId === 'string' ? objection.caseId : caseInfo._id}`}
               className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
             >
               返回案件
             </Link>
           )}
           <Link
-            to={`/evidence/${typeof objection.evidenceId === 'string' ? objection.evidenceId : evidenceInfo?._id}/objections`}
+            href={`/evidence/${typeof objection.evidenceId === 'string' ? objection.evidenceId : evidenceInfo?._id}/objections`}
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
           >
             返回列表
@@ -165,7 +165,7 @@ export default function ObjectionDetail() {
         {objection.status === 'pending' && user?.role === 'judge' && (
           <div>
             <Link
-              to={`/objections/${id}/handle`}
+              href={`/objections/${id}/handle`}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               处理质证意见

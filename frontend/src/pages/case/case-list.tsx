@@ -1,7 +1,7 @@
 'use client'
 
-import { CaseApi } from '@/api/case.api';
-import { Case } from '@/models/case.model';
+import { CaseApi } from '../../api/case.api';
+import { Case } from '../../models/case.model';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '../../../store/authStore';

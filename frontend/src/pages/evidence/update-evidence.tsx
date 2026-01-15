@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { EvidenceApi } from '@/src/api/evidence.api';
-import { Evidence } from '@/src/models/evidence.model';
-import FormInput from '@/src/components/form-input';
+import { EvidenceApi } from '../../api/evidence.api';
+import { Evidence } from '../../models/evidence.model';
+import FormInput from '../../components/form-input';
 import toast from 'react-hot-toast';
 
 interface EvidenceForm {
