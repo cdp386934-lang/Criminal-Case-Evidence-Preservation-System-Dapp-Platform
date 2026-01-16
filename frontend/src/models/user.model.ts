@@ -4,7 +4,6 @@ export type UserRole = 'police' | 'judge' | 'prosecutor' | 'lawyer' | 'admin';
 // 用户接口
 export interface User {
     _id?: string;
-    id?: string;
     name: string;
     email: string;
     role: UserRole;

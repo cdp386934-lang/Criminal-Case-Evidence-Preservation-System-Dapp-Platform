@@ -22,16 +22,6 @@ ps:
 
 #### 3.查看证据阶段
 
-
-后端：
-我需要将对应controller和service合起来？
-
-
-
-
-
-
-
 /***
  * Dashboard page
  * Todo
@@ -75,6 +65,7 @@ ps:
 案件的三个状态：
   INVESTIGATION = 'INVESTIGATION', // 侦查中
   当案件在侦察中时，police和lawyer可以上传证据；lawyer上传证据（需要新增）
+  lawyer上传的证据，需要给police进行验证是否合理；证据状态： （pending）待查阅、approved、rejected,【后端也需要增加】
   PROCURATORATE = 'PROCURATORATE', // 起诉
   当案件在起诉中时，lawyer、procurator可以上传证据，只有在这个阶段中才能进行质证（对质证进行增删改查）
   在这里进行双方质证环节；

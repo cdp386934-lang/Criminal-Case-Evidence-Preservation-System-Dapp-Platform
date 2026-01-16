@@ -168,18 +168,3 @@ npx hardhat run scripts/deploy.ts --network sepolia
    - 生产环境建议使用联盟链或私有链
    - 确保有足够的 gas 费用
 
-## 故障排查
-
-### 后端无法连接 MongoDB
-- 检查 MongoDB 服务是否运行
-- 检查 MONGODB_URI 配置是否正确
-
-### 合约调用失败
-- 检查 CONTRACT_ADDRESS 是否正确
-- 检查 PRIVATE_KEY 是否有足够的余额
-- 检查 BLOCKCHAIN_RPC_URL 是否可访问
-
-### 文件上传失败
-- 检查 UPLOAD_DIR 目录权限
-- 检查 MAX_FILE_SIZE 配置
-

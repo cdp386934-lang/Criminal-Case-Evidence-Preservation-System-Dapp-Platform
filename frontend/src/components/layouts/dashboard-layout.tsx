@@ -30,7 +30,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     police: [
       { href: '/notification/notification-list', label: '通知中心' },
       { href: '/case/case-list', label: '案件管理' },
-      { href: '/case/add-case', label: '创建案件' },
+      { href: '/case/create-case', label: '创建案件' },
       { href: '/evidence/evidence-list', label: '证据管理' },
       { href: '/objection/objectionList', label: '诉讼管理' },
       { href: '/profile', label: '个人中心' },

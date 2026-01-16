@@ -12,22 +12,22 @@ import TimelineViewer from '../../components/timeline-viewer';
 
 export default function CaseDetail() {
   const searchParams = useSearchParams();
-  const id = searchParams.get('id');
+  const _id = searchParams.get('_id');
   const router = useRouter();
   const [caseData, setCaseData] = useState<Case | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
+    if (_id) {
       loadCase();
     }
-  }, [id]);
+  }, [_id]);
 
   const loadCase = async () => {
-    if (!id) return;
+    if (!_id) return;
     try {
       setLoading(true);
-      const response = await CaseApi.getById(id);
+      const response = await CaseApi.getById(_id);
       setCaseData(response.data.data);
     } catch (error: any) {
       toast.error(error.response?.data?.message || '加载失败');
@@ -66,14 +66,14 @@ export default function CaseDetail() {
         <div className="space-x-2">
           <RoleGuard allow={['judge']}>
             <Link
-              href={`/case/update-case?id=${id}`}
+              href={`/case/update-case?id=${_id}`}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               编辑
             </Link>
           </RoleGuard>
           <Link
-            href={`/case/case-workflow?id=${id}`}
+            href={`/case/case-workflow?id=${_id}`}
             className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
           >
             流程管理
@@ -137,14 +137,14 @@ export default function CaseDetail() {
           <h2 className="text-xl font-semibold">相关资源</h2>
           <div className="space-x-2">
             <Link
-              href={`/evidence/evidence-list?caseId=${id}`}
+              href={`/evidence/evidence-list?caseId=${_id}`}
               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
             >
               查看证据
             </Link>
             <RoleGuard allow={['lawyer']}>
               <Link
-                href={`/defense-material/defense-material-list?caseId=${id}`}
+                href={`/defense-material/defense-material-list?caseId=${_id}`}
                 className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
               >
                 查看辩护材料

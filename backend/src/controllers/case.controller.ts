@@ -18,7 +18,7 @@ import { sendSuccess } from '../utils/response';
 import { isCaseParticipant, loadAndCheckCase } from '../services/case.helper.service';
 import { recordOperation } from './operation-logs.controller';
 
-interface AddCaseBody {
+interface CreateCaseBody {
   caseNumber: string;
   caseTitle: string;
   caseType: CaseType;
@@ -61,7 +61,7 @@ const canTransition = (
    Controller
 ===================================================== */
 
-export const addCase = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const createCase = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const user = requireRole(req.user, [UserRole.POLICE]);
     const payload = req.body;

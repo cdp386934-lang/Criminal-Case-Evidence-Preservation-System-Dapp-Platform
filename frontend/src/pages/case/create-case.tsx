@@ -19,7 +19,7 @@ interface CaseForm {
   lawyerIds?: string[];
 }
 
-export default function AddCase() {
+export default function CreateCase() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
@@ -165,8 +165,8 @@ export default function AddCase() {
                       <option disabled>暂无检察官</option>
                     ) : (
                       prosecutors.map((user) => (
-                        <option key={user._id || user.id} value={user._id || user.id}>
-                          {user.name} ({user._id || user.id})
+                        <option key={user._id} value={user._id}>
+                          {user.name} ({user._id})
                         </option>
                       ))
                     )}
@@ -198,8 +198,8 @@ export default function AddCase() {
                       <option disabled>暂无法官</option>
                     ) : (
                       judges.map((user) => (
-                        <option key={user._id || user.id} value={user._id || user.id}>
-                          {user.name} ({user._id || user.id})
+                        <option key={user._id } value={user._id}>
+                          {user.name} ({user._id })
                         </option>
                       ))
                     )}
@@ -231,8 +231,8 @@ export default function AddCase() {
                       <option disabled>暂无律师</option>
                     ) : (
                       lawyers.map((user) => (
-                        <option key={user._id || user.id} value={user._id || user.id}>
-                          {user.name} ({user._id || user.id})
+                        <option key={user._id} value={user._id}>
+                          {user.name} ({user._id})
                         </option>
                       ))
                     )}

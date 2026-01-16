@@ -49,7 +49,7 @@ export default function CaseList() {
         <h1 className="text-2xl font-bold">案件列表</h1>
         {user?.role === 'police' && (
           <Link
-            href="/case/add-case"
+            href="/case/create-case"
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             创建案件

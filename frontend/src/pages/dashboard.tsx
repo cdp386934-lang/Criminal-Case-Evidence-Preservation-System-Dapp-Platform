@@ -236,7 +236,7 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             </Link>
-            <Link href="/case/add-case">
+            <Link href="/case/create-case">
               <Card className="h-full hover:border-primary-700 transition-colors cursor-pointer border border-gray-200">
                 <CardContent className="p-6 flex items-center gap-4 h-full">
                   <div className="p-3 bg-background-secondary rounded border border-gray-300 flex-shrink-0">

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
 import {
-  addCase,
+  createCase,
   updateCase,
   deleteCase,
   getCase,
@@ -15,7 +15,7 @@ const router = Router();
 /**
  * Case CRUD
  */
-router.post('/', authenticate, addCase);            // 创建案件
+router.post('/', authenticate, createCase);            // 创建案件
 router.get('/', authenticate, listCases);           // 查询当前用户案件列表
 router.get('/:id', authenticate, getCase);          // 查询单个案件
 router.put('/:id', authenticate, updateCase);       // 更新案件
