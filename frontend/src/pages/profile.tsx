@@ -42,31 +42,45 @@ export default function ProfilePage() {
   })
 
   useEffect(() => {
+    let isMounted = true
     const loadProfile = async () => {
       try {
         setLoading(true)
         const res = await AuthApi.getMe()
         const data = res.data?.data || res.data
-        setUser(data)
-        setForm({
-          name: data?.name || '',
-          phone: data?.phone || '',
-          address: data?.address || '',
-        })
-        // 同步到全局 auth store（保持头像/姓名等最新）
-        setAuthUser({
-          ...authUser,
-          ...data,
-        } as any)
+        if (isMounted) {
+          setUser(data)
+          setForm({
+            name: data?.name || '',
+            phone: data?.phone || '',
+            address: data?.address || '',
+          })
+          // 同步到全局 auth store（保持头像/姓名等最新）
+          // 使用函数式更新避免依赖 authUser
+          setAuthUser((prev: any) => ({
+            ...prev,
+            ...data,
+          }))
+        }
       } catch (error: any) {
-        console.error('加载用户信息失败', error)
-        toast.error(error?.response?.data?.error || '加载用户信息失败')
+        if (isMounted) {
+          console.error('加载用户信息失败', error)
+          // 避免429错误时重复提示
+          if (error?.response?.status !== 429) {
+            toast.error(error?.response?.data?.error || '加载用户信息失败')
+          }
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
     loadProfile()
-  }, [authUser, setAuthUser])
+    return () => {
+      isMounted = false
+    }
+  }, [setAuthUser]) // 只在组件挂载时执行一次，setAuthUser 是稳定的引用
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()

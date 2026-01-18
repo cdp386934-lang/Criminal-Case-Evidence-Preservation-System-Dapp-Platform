@@ -8,15 +8,17 @@ import toast from 'react-hot-toast';
 import { CaseApi } from '../../api/case.api';
 import { UserApi } from '../../api/user-api';
 import { User } from '../../models/user.model';
+import { CaseType, CreateCaseDTO } from '../../models/case.model';
 
 interface CaseForm {
   caseNumber: string;
   caseTitle: string;
-  caseType: string;
+  caseType: CaseType;
   description?: string;
   prosecutorIds?: string[];
   judgeIds?: string[];
-  lawyerIds?: string[];
+  plaintiffLawyerIds?: string[];
+  defendantLawyerIds?: string[];
 }
 
 export default function CreateCase() {
@@ -32,16 +34,20 @@ export default function CreateCase() {
     setValue,
   } = useForm<CaseForm>({
     defaultValues: {
+      caseType: 'PUBLIC_PROSECUTION' as CaseType,
       prosecutorIds: [],
       judgeIds: [],
-      lawyerIds: [],
+      plaintiffLawyerIds: [],
+      defendantLawyerIds: [],
     },
   });
 
   // 监听表单字段变化
+  const selectedCaseType = watch('caseType');
   const selectedProsecutorIds = watch('prosecutorIds') || [];
   const selectedJudgeIds = watch('judgeIds') || [];
-  const selectedLawyerIds = watch('lawyerIds') || [];
+  const selectedPlaintiffLawyerIds = watch('plaintiffLawyerIds') || [];
+  const selectedDefendantLawyerIds = watch('defendantLawyerIds') || [];
 
   useEffect(() => {
     loadUsers();
@@ -66,7 +72,7 @@ export default function CreateCase() {
 
   // 处理多选变化
   const handleMultiSelectChange = (
-    field: 'prosecutorIds' | 'judgeIds' | 'lawyerIds',
+    field: 'prosecutorIds' | 'judgeIds' | 'plaintiffLawyerIds' | 'defendantLawyerIds',
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const selectedValues = Array.from(event.target.selectedOptions).map(
@@ -78,15 +84,25 @@ export default function CreateCase() {
   const onSubmit = async (data: CaseForm) => {
     try {
       setLoading(true);
-      const payload = {
+      const payload: CreateCaseDTO = {
         caseNumber: data.caseNumber,
         caseTitle: data.caseTitle,
         caseType: data.caseType,
         description: data.description,
-        prosecutorIds: data.prosecutorIds || [],
         judgeIds: data.judgeIds || [],
-        lawyerIds: data.lawyerIds || [],
       };
+
+      // 根据案件类型设置不同的字段
+      if (data.caseType === 'PUBLIC_PROSECUTION') {
+        // 公诉案件：需要检察官和被告律师
+        payload.prosecutorIds = data.prosecutorIds || [];
+        payload.defendantLawyerIds = data.defendantLawyerIds || [];
+      } else if (data.caseType === 'CIVIL_LITIGATION') {
+        // 民事诉讼：需要原告律师和被告律师
+        payload.plaintiffLawyerIds = data.plaintiffLawyerIds || [];
+        payload.defendantLawyerIds = data.defendantLawyerIds || [];
+      }
+
       await CaseApi.create(payload);
       toast.success('案件创建成功');
       router.push('/case/case-list');
@@ -123,12 +139,22 @@ export default function CreateCase() {
             />
           </div>
 
-          <FormInput
-            {...register('caseType', { required: '案件类型是必填项' })}
-            label="案件类型"
-            error={errors.caseType?.message}
-            required
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              案件类型 <span className="text-red-500">*</span>
+            </label>
+            <select
+              {...register('caseType', { required: '案件类型是必填项' })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">请选择案件类型</option>
+              <option value="PUBLIC_PROSECUTION">公诉</option>
+              <option value="CIVIL_LITIGATION">民事诉讼</option>
+            </select>
+            {errors.caseType && (
+              <p className="mt-1 text-sm text-red-600">{errors.caseType.message}</p>
+            )}
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -145,107 +171,188 @@ export default function CreateCase() {
           {/* 人员选择 */}
           <div className="border-t pt-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">相关人员</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* 检察官选择 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  检察官
-                </label>
-                {loadingUsers ? (
-                  <div className="text-sm text-gray-500">加载中...</div>
-                ) : (
-                  <select
-                    multiple
-                    size={5}
-                    value={selectedProsecutorIds}
-                    onChange={(e) => handleMultiSelectChange('prosecutorIds', e)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  >
-                    {prosecutors.length === 0 ? (
-                      <option disabled>暂无检察官</option>
-                    ) : (
-                      prosecutors.map((user) => (
-                        <option key={user._id} value={user._id}>
-                          {user.name} ({user._id})
-                        </option>
-                      ))
-                    )}
-                  </select>
-                )}
-                {selectedProsecutorIds.length > 0 && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    已选择 {selectedProsecutorIds.length} 位检察官
-                  </p>
-                )}
-              </div>
-
-              {/* 法官选择 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  法官
-                </label>
-                {loadingUsers ? (
-                  <div className="text-sm text-gray-500">加载中...</div>
-                ) : (
-                  <select
-                    multiple
-                    size={5}
-                    value={selectedJudgeIds}
-                    onChange={(e) => handleMultiSelectChange('judgeIds', e)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  >
-                    {judges.length === 0 ? (
-                      <option disabled>暂无法官</option>
-                    ) : (
-                      judges.map((user) => (
-                        <option key={user._id } value={user._id}>
-                          {user.name} ({user._id })
-                        </option>
-                      ))
-                    )}
-                  </select>
-                )}
-                {selectedJudgeIds.length > 0 && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    已选择 {selectedJudgeIds.length} 位法官
-                  </p>
-                )}
-              </div>
-
-              {/* 律师选择 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  律师
-                </label>
-                {loadingUsers ? (
-                  <div className="text-sm text-gray-500">加载中...</div>
-                ) : (
-                  <select
-                    multiple
-                    size={5}
-                    value={selectedLawyerIds}
-                    onChange={(e) => handleMultiSelectChange('lawyerIds', e)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  >
-                    {lawyers.length === 0 ? (
-                      <option disabled>暂无律师</option>
-                    ) : (
-                      lawyers.map((user) => (
-                        <option key={user._id} value={user._id}>
-                          {user.name} ({user._id})
-                        </option>
-                      ))
-                    )}
-                  </select>
-                )}
-                {selectedLawyerIds.length > 0 && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    已选择 {selectedLawyerIds.length} 位律师
-                  </p>
-                )}
-              </div>
+            
+            {/* 法官选择 - 所有案件类型都需要 */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                法官
+              </label>
+              {loadingUsers ? (
+                <div className="text-sm text-gray-500">加载中...</div>
+              ) : (
+                <select
+                  multiple
+                  size={5}
+                  value={selectedJudgeIds}
+                  onChange={(e) => handleMultiSelectChange('judgeIds', e)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                >
+                  {judges.length === 0 ? (
+                    <option disabled>暂无法官</option>
+                  ) : (
+                    judges.map((user) => (
+                      <option key={user._id} value={user._id}>
+                        {user.name} ({user._id})
+                      </option>
+                    ))
+                  )}
+                </select>
+              )}
+              {selectedJudgeIds.length > 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  已选择 {selectedJudgeIds.length} 位法官
+                </p>
+              )}
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+
+            {/* 根据案件类型显示不同的字段 */}
+            {selectedCaseType === 'PUBLIC_PROSECUTION' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* 检察官选择 - 仅公诉案件 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    检察官 <span className="text-red-500">*</span>
+                  </label>
+                  {loadingUsers ? (
+                    <div className="text-sm text-gray-500">加载中...</div>
+                  ) : (
+                    <select
+                      multiple
+                      size={5}
+                      value={selectedProsecutorIds}
+                      onChange={(e) => handleMultiSelectChange('prosecutorIds', e)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    >
+                      {prosecutors.length === 0 ? (
+                        <option disabled>暂无检察官</option>
+                      ) : (
+                        prosecutors.map((user) => (
+                          <option key={user._id} value={user._id}>
+                            {user.name} ({user._id})
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  )}
+                  {selectedProsecutorIds.length > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      已选择 {selectedProsecutorIds.length} 位检察官
+                    </p>
+                  )}
+                </div>
+
+                {/* 被告律师 - 公诉案件 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    被告律师 <span className="text-red-500">*</span>
+                  </label>
+                  {loadingUsers ? (
+                    <div className="text-sm text-gray-500">加载中...</div>
+                  ) : (
+                    <select
+                      multiple
+                      size={5}
+                      value={selectedDefendantLawyerIds}
+                      onChange={(e) => handleMultiSelectChange('defendantLawyerIds', e)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    >
+                      {lawyers.length === 0 ? (
+                        <option disabled>暂无律师</option>
+                      ) : (
+                        lawyers.map((user) => (
+                          <option key={user._id} value={user._id}>
+                            {user.name} ({user._id})
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  )}
+                  {selectedDefendantLawyerIds.length > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      已选择 {selectedDefendantLawyerIds.length} 位被告律师
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {selectedCaseType === 'CIVIL_LITIGATION' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* 原告律师 - 仅民事诉讼 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    原告律师 <span className="text-red-500">*</span>
+                  </label>
+                  {loadingUsers ? (
+                    <div className="text-sm text-gray-500">加载中...</div>
+                  ) : (
+                    <select
+                      multiple
+                      size={5}
+                      value={selectedPlaintiffLawyerIds}
+                      onChange={(e) => handleMultiSelectChange('plaintiffLawyerIds', e)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    >
+                      {lawyers.length === 0 ? (
+                        <option disabled>暂无律师</option>
+                      ) : (
+                        lawyers.map((user) => (
+                          <option key={user._id} value={user._id}>
+                            {user.name} ({user._id})
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  )}
+                  {selectedPlaintiffLawyerIds.length > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      已选择 {selectedPlaintiffLawyerIds.length} 位原告律师
+                    </p>
+                  )}
+                </div>
+
+                {/* 被告律师 - 民事诉讼 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    被告律师 <span className="text-red-500">*</span>
+                  </label>
+                  {loadingUsers ? (
+                    <div className="text-sm text-gray-500">加载中...</div>
+                  ) : (
+                    <select
+                      multiple
+                      size={5}
+                      value={selectedDefendantLawyerIds}
+                      onChange={(e) => handleMultiSelectChange('defendantLawyerIds', e)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    >
+                      {lawyers.length === 0 ? (
+                        <option disabled>暂无律师</option>
+                      ) : (
+                        lawyers.map((user) => (
+                          <option key={user._id} value={user._id}>
+                            {user.name} ({user._id})
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  )}
+                  {selectedDefendantLawyerIds.length > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      已选择 {selectedDefendantLawyerIds.length} 位被告律师
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {!selectedCaseType && (
+              <div className="text-sm text-gray-500 italic">
+                请先选择案件类型以显示相应的人员选择字段
+              </div>
+            )}
+
+            <p className="text-xs text-gray-500 mt-4">
               提示：按住 Ctrl (Windows) 或 Cmd (Mac) 键可多选
             </p>
           </div>

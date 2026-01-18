@@ -43,20 +43,34 @@ export default function DashboardPage() {
       router.push('/login')
       return
     }
-    loadCases()
-  }, [user, isAuthenticated, router])
-
-  const loadCases = async () => {
-    try {
-      setLoading(true)
-      const response = await CaseApi.list()
-      setCases(Array.isArray(response.data) ? response.data : response.data?.data || [])
-    } catch (error) {
-      console.error('Failed to load cases:', error)
-    } finally {
-      setLoading(false)
+    let isMounted = true
+    const fetchCases = async () => {
+      try {
+        setLoading(true)
+        const response = await CaseApi.list()
+        if (isMounted) {
+          setCases(Array.isArray(response.data) ? response.data : response.data?.data || [])
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error('Failed to load cases:', error)
+          // 避免429错误时重复提示
+          if ((error as any)?.response?.status !== 429) {
+            // 可以选择性地显示错误提示
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
+      }
     }
-  }
+    fetchCases()
+    return () => {
+      isMounted = false
+    }
+  }, [isAuthenticated]) // 只依赖 isAuthenticated，避免 user 对象变化导致重复请求
+
 
   if (!isAuthenticated || !user) {
     return (
