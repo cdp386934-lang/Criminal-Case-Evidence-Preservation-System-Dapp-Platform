@@ -187,7 +187,13 @@ export const listCases = async (req: AuthRequest, res: Response, next: NextFunct
   try {
     const user = requireRole(req.user, Object.values(UserRole) as UserRole[]);
 
-    const query =
+    // 分页参数
+    const { page = '1', pageSize = '20', keyword, status, caseType } = req.query;
+    const pageNum = Math.max(1, parseInt(page as string, 10));
+    const pageSizeNum = Math.min(100, Math.max(1, parseInt(pageSize as string, 10)));
+
+    // 基础查询：根据用户角色筛选案件
+    let baseQuery: any =
       user.role === UserRole.POLICE
         ? { policeId: user.userId }
         : user.role === UserRole.PROSECUTOR
@@ -201,8 +207,41 @@ export const listCases = async (req: AuthRequest, res: Response, next: NextFunct
               ],
             };
 
-    const cases = await Case.find(query).sort({ createdAt: -1 });
-    sendSuccess(res, cases);
+    // 模糊搜索：案件编号或标题
+    if (keyword) {
+      baseQuery.$and = baseQuery.$and || [];
+      baseQuery.$and.push({
+        $or: [
+          { caseNumber: { $regex: keyword as string, $options: 'i' } },
+          { caseTitle: { $regex: keyword as string, $options: 'i' } },
+        ],
+      });
+    }
+
+    // 状态筛选
+    if (status) {
+      baseQuery.status = status;
+    }
+
+    // 案件类型筛选
+    if (caseType) {
+      baseQuery.caseType = caseType;
+    }
+
+    // 计算总数和查询数据
+    const total = await Case.countDocuments(baseQuery);
+    const cases = await Case.find(baseQuery)
+      .sort({ createdAt: -1 })
+      .skip((pageNum - 1) * pageSizeNum)
+      .limit(pageSizeNum);
+
+    sendSuccess(res, {
+      items: cases,
+      page: pageNum,
+      pageSize: pageSizeNum,
+      total,
+      totalPages: Math.ceil(total / pageSizeNum),
+    });
   } catch (e) {
     next(e);
   }

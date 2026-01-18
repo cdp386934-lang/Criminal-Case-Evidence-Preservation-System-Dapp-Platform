@@ -9,10 +9,10 @@ export enum EvidenceType {
   OTHER = 'other',
 }
 export enum EvidenceStatus {
-  PENDING = 'pending',
-  VERIFIED = 'verified',
-  REJECTED = 'rejected',
-  CORRECTED = 'corrected',
+  PENDING = 'pending',      // 待查阅（lawyer上传的证据在侦查阶段需要police验证）
+  APPROVED = 'approved',    // 已批准（原VERIFIED，police验证通过）
+  REJECTED = 'rejected',    // 已拒绝（police验证不通过）
+  CORRECTED = 'corrected',  // 已补正
 }
 
 export interface IEvidence extends Document {

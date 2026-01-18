@@ -1,10 +1,37 @@
 import { Case, CreateCaseDTO, MoveNextStageDTO, UpdateCaseDTO } from "../models/case.model";
 import ApiClient from "./api-client";
 
+// 通用分页响应类型
+export interface PaginatedResponse<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface ListCasesParams {
+  page?: number;
+  pageSize?: number;
+  keyword?: string;
+  status?: string;
+  caseType?: string;
+}
+
 export const CaseApi = {
-  /** 当前用户案件列表 */
-  list: () =>
-    ApiClient.get<{ success: boolean; data: Case[] }>('/cases'),
+  /** 当前用户案件列表（支持分页和搜索） */
+  list: (params?: ListCasesParams) => {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+    if (params?.keyword) queryParams.append('keyword', params.keyword);
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.caseType) queryParams.append('caseType', params.caseType);
+    const query = queryParams.toString();
+    return ApiClient.get<{ success: boolean; data: PaginatedResponse<Case> }>(
+      `/cases${query ? `?${query}` : ''}`
+    );
+  },
 
   /** 获取案件详情 */
   getById: (id: string) =>

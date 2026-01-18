@@ -84,6 +84,32 @@ export default function CreateCase() {
   const onSubmit = async (data: CaseForm) => {
     try {
       setLoading(true);
+      
+      // 前端验证：根据案件类型检查必填字段
+      if (data.caseType === 'PUBLIC_PROSECUTION') {
+        if (!data.prosecutorIds || data.prosecutorIds.length === 0) {
+          toast.error('公诉案件必须至少选择一位检察官');
+          setLoading(false);
+          return;
+        }
+        if (!data.defendantLawyerIds || data.defendantLawyerIds.length === 0) {
+          toast.error('公诉案件必须至少选择一位被告律师');
+          setLoading(false);
+          return;
+        }
+      } else if (data.caseType === 'CIVIL_LITIGATION') {
+        if (!data.plaintiffLawyerIds || data.plaintiffLawyerIds.length === 0) {
+          toast.error('民事诉讼必须至少选择一位原告律师');
+          setLoading(false);
+          return;
+        }
+        if (!data.defendantLawyerIds || data.defendantLawyerIds.length === 0) {
+          toast.error('民事诉讼必须至少选择一位被告律师');
+          setLoading(false);
+          return;
+        }
+      }
+
       const payload: CreateCaseDTO = {
         caseNumber: data.caseNumber,
         caseTitle: data.caseTitle,
@@ -107,8 +133,17 @@ export default function CreateCase() {
       toast.success('案件创建成功');
       router.push('/case/case-list');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || '创建失败');
+      // 更详细的错误提示
+      const errorMessage = error.response?.data?.error || 
+                          error.response?.data?.message || 
+                          error.message || 
+                          '创建失败';
+      toast.error(typeof errorMessage === 'string' ? errorMessage : '创建失败，请检查表单数据');
       console.error('创建案件失败:', error);
+      // 打印详细的错误信息便于调试
+      if (error.response?.data) {
+        console.error('错误详情:', error.response.data);
+      }
     } finally {
       setLoading(false);
     }

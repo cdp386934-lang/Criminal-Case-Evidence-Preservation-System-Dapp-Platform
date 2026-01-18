@@ -22,12 +22,15 @@ import { recordOperation } from './operation-logs.controller';
 type ControllerHandler = (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;
 
 /**
- * 提交质证意见（律师）
- * 权限：只有律师可以提交质证意见，且必须是案件的参与者
+ * 提交质证意见（律师或检察官）
+ * 权限：
+ * - 民事诉讼（PROCURATORATE阶段）：原被告律师可以互相质证
+ * - 公诉案件（PROCURATORATE阶段）：lawyer和procurator可以互相质证
  */
 export const submitObjection: ControllerHandler = async (req, res, next) => {
   try {
-    const currentUser = requireRole(req.user, [UserRole.LAWYER]);
+    // 允许律师和检察官提交质证意见
+    const currentUser = requireRole(req.user, [UserRole.LAWYER, UserRole.PROSECUTOR]);
     const { caseId, evidenceId, content } = req.body;
 
     if (!caseId || !evidenceId || !content) {
@@ -45,9 +48,28 @@ export const submitObjection: ControllerHandler = async (req, res, next) => {
       throw new NotFoundError('Evidence not found');
     }
 
-    // 验证权限：律师必须关联到该案件
-    if (!caseDoc.plaintiffLawyerIds || caseDoc.defendantLawyerIds?.some((id: any) => id.toString() === currentUser.userId)) {
+    // 验证案件状态：只能在PROCURATORATE阶段进行质证
+    if (caseDoc.status !== 'PROCURATORATE') {
+      throw new ForbiddenError('Objections can only be submitted during prosecution stage');
+    }
+
+    // 验证权限：用户必须是案件的参与者
+    const hasAccess = isCaseParticipant(caseDoc, currentUser);
+    if (!hasAccess) {
       throw new ForbiddenError('Forbidden: Not assigned to this case');
+    }
+
+    // 根据案件类型验证权限
+    if (caseDoc.caseType === 'CIVIL_LITIGATION') {
+      // 民事诉讼：只有律师可以质证
+      if (currentUser.role !== UserRole.LAWYER) {
+        throw new ForbiddenError('Only lawyers can submit objections for civil litigation cases');
+      }
+    } else if (caseDoc.caseType === 'PUBLIC_PROSECUTION') {
+      // 公诉案件：律师和检察官都可以质证
+      if (![UserRole.LAWYER, UserRole.PROSECUTOR].includes(currentUser.role)) {
+        throw new ForbiddenError('Only lawyers and prosecutors can submit objections for public prosecution cases');
+      }
     }
 
     // 验证证据属于该案件
@@ -111,7 +133,10 @@ export const listObjections: ControllerHandler = async (req, res, next) => {
       throw new ForbiddenError('Authentication required');
     }
 
-    const { caseId, evidenceId, status } = req.query;
+    // 分页参数
+    const { caseId, evidenceId, status, keyword, page = '1', pageSize = '20' } = req.query;
+    const pageNum = Math.max(1, parseInt(page as string, 10));
+    const pageSizeNum = Math.min(100, Math.max(1, parseInt(pageSize as string, 10)));
 
     let query: any = {};
 
@@ -138,14 +163,29 @@ export const listObjections: ControllerHandler = async (req, res, next) => {
       query.lawyerId = req.user.userId;
     }
 
+    // 模糊搜索：质证内容
+    if (keyword) {
+      query.content = { $regex: keyword as string, $options: 'i' };
+    }
+
+    // 计算总数和查询数据
+    const total = await Objection.countDocuments(query);
     const objections = await Objection.find(query)
       .populate('caseId', 'caseNumber caseTitle')
       .populate('evidenceId', 'evidenceId title')
       .populate('lawyerId', 'name email role')
       .populate('handledBy', 'name email role')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip((pageNum - 1) * pageSizeNum)
+      .limit(pageSizeNum);
 
-    sendSuccess(res, objections);
+    sendSuccess(res, {
+      items: objections,
+      page: pageNum,
+      pageSize: pageSizeNum,
+      total,
+      totalPages: Math.ceil(total / pageSizeNum),
+    });
   } catch (error) {
     next(error);
   }

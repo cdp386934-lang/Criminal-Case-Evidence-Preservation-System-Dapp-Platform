@@ -10,7 +10,7 @@ import { Briefcase, Plus, FileText, Users, Gavel, Scale, Shield, Bell, Lock, Use
 import MainLayout from '@/components/layouts/main-layout'
 import { Case } from '@/models/case.model'
 import ApiClient from '@/api/api-client'
-import { CaseApi } from '@/api/case.api'
+import { CaseApi, PaginatedResponse } from '@/api/case.api'
 import RoleGuard from '@/components/role-guard'
 
 // 获取 API 基础 URL（用于访问静态资源如图片）
@@ -47,9 +47,12 @@ export default function DashboardPage() {
     const fetchCases = async () => {
       try {
         setLoading(true)
-        const response = await CaseApi.list()
+        // 只获取前5个案件用于仪表板显示
+        const response = await CaseApi.list({ page: 1, pageSize: 5 })
         if (isMounted) {
-          setCases(Array.isArray(response.data) ? response.data : response.data?.data || [])
+          // 处理新的分页响应格式
+          const data = response.data.data as PaginatedResponse<Case>
+          setCases(data?.items || [])
         }
       } catch (error) {
         if (isMounted) {

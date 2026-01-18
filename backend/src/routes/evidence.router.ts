@@ -6,12 +6,14 @@ import {
   getEvidence,
   listEvidenceByCase,
   updateEvidence,
+  verifyEvidence,
 } from '../controllers/evidence.controller';
 
 const router = Router();
 
 router.post('/add', authenticate, addEvidence);
 router.put('/update/:id', authenticate, updateEvidence);
+router.put('/verify/:id', authenticate, verifyEvidence); // 警察验证律师上传的证据
 router.delete('/delete/:id', authenticate, deleteEvidence);
 router.get('/get/:id', authenticate, getEvidence);
 router.get('/list/:caseId', authenticate, listEvidenceByCase);

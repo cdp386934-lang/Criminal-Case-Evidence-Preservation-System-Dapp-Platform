@@ -143,6 +143,14 @@ export const addEvidence: ControllerHandler = async (req, res, next) => {
     // 验证案件权限与阶段
     const caseDoc = await ensureCaseAccess(payload.caseId, currentUser, 'upload');
 
+    // 在INVESTIGATION阶段，如果lawyer上传证据，状态设为pending，需要police验证
+    let initialStatus = 'pending';
+    if (caseDoc.status === CaseStatus.INVESTIGATION && currentUser.role === UserRole.LAWYER) {
+      initialStatus = 'pending'; // lawyer上传的证据需要police验证
+    } else if (currentUser.role === UserRole.POLICE) {
+      initialStatus = 'approved'; // police上传的证据直接通过
+    }
+
     // 创建证据
     const createdEvidence = await createEvidence({
       caseId: payload.caseId,
@@ -154,6 +162,7 @@ export const addEvidence: ControllerHandler = async (req, res, next) => {
       fileType: payload.fileType,
       fileSize: Number(payload.fileSize),
       evidenceType: payload.evidenceType as CreateEvidenceDTO['evidenceType'],
+      status: initialStatus as any,
     });
 
     // 自动推送通知给案件参与者（排除上传者自己）
@@ -306,7 +315,7 @@ export const getEvidence: ControllerHandler = async (req, res, next) => {
 /**
  * 获取案件下的证据列表（公安、法官、检察官、律师可访问）
  * 权限：四个角色都可以查看证据列表，但需满足阶段限制
- * @param req 请求对象，包含案件ID
+ * @param req 请求对象，包含案件ID、分页和搜索参数
  * @param res 响应对象
  * @param next 错误处理中间件
  */
@@ -318,6 +327,9 @@ export const listEvidenceByCase: ControllerHandler = async (req, res, next) => {
     }
 
     const caseId = req.params.caseId;
+    const { page = '1', pageSize = '20', keyword, status, evidenceType } = req.query;
+    const pageNum = Math.max(1, parseInt(page as string, 10));
+    const pageSizeNum = Math.min(100, Math.max(1, parseInt(pageSize as string, 10)));
 
     // 验证用户是否是案件的参与者
     const caseDoc = await ensureCaseAccess(caseId, req.user, 'view');
@@ -327,8 +339,123 @@ export const listEvidenceByCase: ControllerHandler = async (req, res, next) => {
       throw new ForbiddenError('You are not assigned to this case, cannot view evidence list');
     }
 
-    const evidences = await listEvidenceByCaseInternal(caseId);
-    sendSuccess(res, evidences);
+    // 构建查询条件
+    const query: any = { caseId };
+
+    // 模糊搜索：标题、描述、文件名
+    if (keyword) {
+      query.$or = [
+        { title: { $regex: keyword as string, $options: 'i' } },
+        { description: { $regex: keyword as string, $options: 'i' } },
+        { fileName: { $regex: keyword as string, $options: 'i' } },
+      ];
+    }
+
+    // 状态筛选
+    if (status) {
+      query.status = status;
+    }
+
+    // 证据类型筛选
+    if (evidenceType) {
+      query.evidenceType = evidenceType;
+    }
+
+    // 计算总数和查询数据
+    const Evidence = (await import('../models/evidence.model')).default;
+    const total = await Evidence.countDocuments(query);
+    const evidences = await Evidence.find(query)
+      .populate('uploaderId', 'name email role')
+      .populate('verifiedBy', 'name email')
+      .sort({ createdAt: -1 })
+      .skip((pageNum - 1) * pageSizeNum)
+      .limit(pageSizeNum);
+
+    sendSuccess(res, {
+      items: evidences,
+      page: pageNum,
+      pageSize: pageSizeNum,
+      total,
+      totalPages: Math.ceil(total / pageSizeNum),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * 验证证据（警察审批律师上传的证据）
+ * 权限：仅在INVESTIGATION阶段，police可以审批lawyer上传的证据
+ */
+export const verifyEvidence: ControllerHandler = async (req, res, next) => {
+  try {
+    const currentUser = requireRole(req.user, [UserRole.POLICE]);
+    const { status, reason } = req.body; // status: 'approved' | 'rejected'
+
+    if (!['approved', 'rejected'].includes(status)) {
+      throw new BadRequestError('Status must be "approved" or "rejected"');
+    }
+
+    const evidence = await getEvidenceById(req.params.id);
+    if (!evidence) {
+      throw new NotFoundError('Evidence not found');
+    }
+
+    const caseDoc = await getCaseById(evidence.caseId.toString());
+    if (!caseDoc) {
+      throw new NotFoundError('Case not found');
+    }
+
+    // 权限检查：仅在INVESTIGATION阶段可以验证
+    if (caseDoc.status !== CaseStatus.INVESTIGATION) {
+      throw new ForbiddenError('Evidence can only be verified during investigation stage');
+    }
+
+    // 只有police可以验证
+    if (caseDoc.policeId?.toString() !== currentUser.userId) {
+      throw new ForbiddenError('Only the assigned police can verify evidence');
+    }
+
+    // 获取上传者信息，确认是lawyer上传的
+    const User = (await import('../models/users.model')).default;
+    const uploader = await User.findById(evidence.uploaderId);
+    if (!uploader || uploader.role !== UserRole.LAWYER) {
+      throw new ForbiddenError('Only evidence uploaded by lawyers can be verified by police');
+    }
+
+    // 更新证据状态
+    const updateData: any = {
+      status: status === 'approved' ? 'approved' : 'rejected',
+      verifiedBy: currentUser.userId,
+      verifiedAt: new Date(),
+    };
+    if (reason) {
+      updateData.correctionReason = reason;
+    }
+
+    const updated = await updateEvidenceInternal(req.params.id, updateData);
+
+    await recordOperation({
+      req,
+      operationType: OperationType.UPDATE,
+      targetType: OperationTargetType.EVIDENCE,
+      targetId: updated._id.toString(),
+      description: `Verified evidence ${updated.evidenceId} as ${status}`,
+    });
+
+    // 通知上传者验证结果
+    await notificationUtils.createNotification({
+      userId: evidence.uploaderId.toString(),
+      senderId: currentUser.userId,
+      type: NotificationType.EVIDENCE_VERIFIED,
+      title: `证据验证${status === 'approved' ? '通过' : '拒绝'}`,
+      content: `您上传的证据 "${evidence.title}" 已被警察验证为${status === 'approved' ? '通过' : '拒绝'}。${reason ? `原因：${reason}` : ''}`,
+      priority: NotificationPriority.HIGH,
+      relatedCaseId: caseDoc._id.toString(),
+      relatedEvidenceId: evidence._id.toString(),
+    });
+
+    sendSuccess(res, updated);
   } catch (error) {
     next(error);
   }
