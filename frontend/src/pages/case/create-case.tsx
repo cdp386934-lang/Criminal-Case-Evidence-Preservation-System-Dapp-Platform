@@ -70,6 +70,11 @@ export default function CreateCase() {
   const judges = users.filter((u) => u.role === 'judge');
   const lawyers = users.filter((u) => u.role === 'lawyer');
 
+  // 获取用户ID的辅助函数（兼容 _id 和 id）
+  const getUserId = (user: User): string => {
+    return user._id || (user as any).id || '';
+  };
+
   // 处理多选变化
   const handleMultiSelectChange = (
     field: 'prosecutorIds' | 'judgeIds' | 'plaintiffLawyerIds' | 'defendantLawyerIds',
@@ -225,11 +230,14 @@ export default function CreateCase() {
                   {judges.length === 0 ? (
                     <option disabled>暂无法官</option>
                   ) : (
-                    judges.map((user) => (
-                      <option key={user._id} value={user._id}>
-                        {user.name} ({user._id})
-                      </option>
-                    ))
+                    judges.map((user) => {
+                      const userId = getUserId(user);
+                      return (
+                        <option key={userId} value={userId}>
+                          {user.name} ({userId})
+                        </option>
+                      );
+                    })
                   )}
                 </select>
               )}
@@ -261,11 +269,14 @@ export default function CreateCase() {
                       {prosecutors.length === 0 ? (
                         <option disabled>暂无检察官</option>
                       ) : (
-                        prosecutors.map((user) => (
-                          <option key={user._id} value={user._id}>
-                            {user.name} ({user._id})
-                          </option>
-                        ))
+                        prosecutors.map((user) => {
+                          const userId = getUserId(user);
+                          return (
+                            <option key={userId} value={userId}>
+                              {user.name} ({userId})
+                            </option>
+                          );
+                        })
                       )}
                     </select>
                   )}
@@ -294,11 +305,14 @@ export default function CreateCase() {
                       {lawyers.length === 0 ? (
                         <option disabled>暂无律师</option>
                       ) : (
-                        lawyers.map((user) => (
-                          <option key={user._id} value={user._id}>
-                            {user.name} ({user._id})
-                          </option>
-                        ))
+                        lawyers.map((user) => {
+                          const userId = getUserId(user);
+                          return (
+                            <option key={userId} value={userId}>
+                              {user.name} ({userId})
+                            </option>
+                          );
+                        })
                       )}
                     </select>
                   )}
@@ -331,11 +345,14 @@ export default function CreateCase() {
                       {lawyers.length === 0 ? (
                         <option disabled>暂无律师</option>
                       ) : (
-                        lawyers.map((user) => (
-                          <option key={user._id} value={user._id}>
-                            {user.name} ({user._id})
-                          </option>
-                        ))
+                        lawyers.map((user) => {
+                          const userId = getUserId(user);
+                          return (
+                            <option key={userId} value={userId}>
+                              {user.name} ({userId})
+                            </option>
+                          );
+                        })
                       )}
                     </select>
                   )}
@@ -364,11 +381,14 @@ export default function CreateCase() {
                       {lawyers.length === 0 ? (
                         <option disabled>暂无律师</option>
                       ) : (
-                        lawyers.map((user) => (
-                          <option key={user._id} value={user._id}>
-                            {user.name} ({user._id})
-                          </option>
-                        ))
+                        lawyers.map((user) => {
+                          const userId = getUserId(user);
+                          return (
+                            <option key={userId} value={userId}>
+                              {user.name} ({userId})
+                            </option>
+                          );
+                        })
                       )}
                     </select>
                   )}

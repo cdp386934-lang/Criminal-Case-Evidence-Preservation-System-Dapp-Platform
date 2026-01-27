@@ -13,7 +13,14 @@ import { Button } from '@/components/ui/button'
 
 // 获取 API 基础 URL（用于访问静态资源如图片）
 const getApiBaseUrl = () => {
-  const baseURL = ApiClient.defaults.baseURL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+  // 优先使用环境变量（Next.js 客户端可以访问 NEXT_PUBLIC_ 开头的环境变量）
+  const envUrl = process.env.NEXT_PUBLIC_API_URL
+  if (envUrl) {
+    // 移除末尾的 /api，用于访问静态资源
+    return envUrl.replace(/\/api\/?$/, '')
+  }
+  // 使用 ApiClient 的 baseURL
+  const baseURL = ApiClient.defaults.baseURL || 'http://localhost:3001/api'
   // 移除末尾的 /api，用于访问静态资源
   return baseURL.replace(/\/api\/?$/, '')
 }
@@ -27,7 +34,10 @@ const getAvatarUrl = (avatarPath: string | null | undefined): string | null => {
   }
   // 如果是相对路径，拼接 baseURL
   const baseUrl = getApiBaseUrl()
-  return `${baseUrl}${avatarPath.startsWith('/') ? avatarPath : '/' + avatarPath}`
+  // 确保路径以 / 开头（avatarPath 通常已经是 /uploads/... 格式）
+  const normalizedPath = avatarPath.startsWith('/') ? avatarPath : '/' + avatarPath
+  const fullUrl = `${baseUrl}${normalizedPath}`
+  return fullUrl
 }
 
 export default function ProfilePage() {
